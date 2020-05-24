@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <head>
+        <script src="https://d3js.org/d3.v3.min.js"></script>
+        <script type="text/javascript" src="d3-grid.js"></script>
+    </head>
+    <title>Covid19 Visualization</title>
+    <body>
+        <p>Hello!</p>
+    </body>
+</head>
+<body>
+
+<script>
+    var points = [];
+    let infection_rate = 1.3
+    var width = 500,
+        height = 500;
+
+    var pointGrid = d3.layout.grid()
+        .points()
+        .size([100, 100]);
+
+    var svg = d3.select("body").append("svg")
+        .attr({
+            width: width,
+            height: height
+        })
+        .append("g")
+            .attr("transform", "translate(70,70)");
+    var numDays = 10
+    addPoint();
+    addPoint();
+    addPoint();
+
+
+    var tick = setInterval(push, 500);
+
+
+    function update() {
+
+
+        // point.transition()
+        //     .attr("r", 5)
+        //     .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+        // point.exit().transition()
+        //     .attr("r", 1e-6)
+        //     .remove();
+
+    }
+
+    //push represents one day of growth
+    function push() {
+        if (points.length >= 250) {
+            clearInterval(tick);
+            return;
+        }
+        let new_length = infection_rate * points.length;
+        let num_new_points = new_length - points.length;
+        for (let i = 0; i < num_new_points; ++i) {
+            addPoint();
+        }
+    }
+
+    function addPoint() {
+        points.push({});
+        var point = svg.selectAll(".point")
+            .data(pointGrid(points));
+        point.enter().append("circle")
+            .attr("class", "point")
+            .attr("r", 5)
+            .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+    }
+
+</script>
+</body>
+</html>
