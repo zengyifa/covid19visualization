@@ -97,22 +97,24 @@ function startSimulation() {
     }
 
     function update() {
+        //check if everyone has been infected
         if (cur_infections >= population) {
             clearInterval(tick);
             return;
         }
-        //check if everyone has been infected
-        let num_new_infections = (infection_rate * cur_infections) - cur_infections;
-        console.log("num new infections is " + num_new_infections)
-        //update current number of infections
-        console.log("cur infections was " + cur_infections);
+        let num_new_infections = infection_rate * cur_infections - cur_infections;
+        // console.log("num new infections is " + num_new_infections)
+        // //update current number of infections
+        // console.log("cur infections was " + cur_infections);
         cur_infections = cur_infections + num_new_infections;
-        console.log("cur infections is now " + cur_infections);
+        // console.log("cur infections is now " + cur_infections);
 
         let new_infections_array = distribute(num_neighborhoods, num_new_infections);
+        console.log(new_infections_array);
         infections_in_neighborhoods = infections_in_neighborhoods.map(function (num, idx) {
             return num + new_infections_array[idx];
         });
+        console.log(infections_in_neighborhoods);
         //make this select some
         var point = svg.selectAll(".point")
             .data(pointGrid(points));
@@ -120,7 +122,7 @@ function startSimulation() {
         point.each(function (d, i) {
             var cur_radius = d3.select(this).attr("r");
             var this_neighborhood_infections = infections_in_neighborhoods[i];
-            var new_radius = Math.min(max_radius, (1 + (this_neighborhood_infections / pop_per_neighborhood)) * cur_radius);
+            var new_radius = Math.min(max_radius, (this_neighborhood_infections / pop_per_neighborhood) * max_radius);
             if (new_radius !== cur_radius) {
                 d3.select(this).transition().attr("r", new_radius);
             }
