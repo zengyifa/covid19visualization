@@ -27,8 +27,6 @@ function startSimulation() {
     //assuming num_neighborhoods is a perfect square
     let num_neighborhoods = 400;
     let neighborhood_populations = distribute_population(10, 400);
-    console.log("neighborhood populations is ");
-    console.log(neighborhood_populations);
     let pop_per_neighborhood = population / num_neighborhoods;
     console.log("population per neighborhood is " + pop_per_neighborhood);
     let rows_cols = Math.sqrt(num_neighborhoods);
@@ -166,7 +164,8 @@ function startSimulation() {
         var leftover = 0;
         for (let i = 0; i < neighborhoods.length; i++) {
             if (neighborhoods[i] > max) {
-                leftover += neighborhoods[i] - max;
+                leftover += (neighborhoods[i] - max);
+                neighborhoods[i] = max;
             }
         }
         //keep distributing leftover until it's 0 and everything is below max
@@ -175,12 +174,20 @@ function startSimulation() {
             leftover = 0;
             for (let i = 0; i < neighborhoods.length; i++) {
                 if (neighborhoods[i] > max) {
-                    leftover += (max - neighborhoods[i]);
+                    leftover += (neighborhoods[i] - max);
                     neighborhoods[i] = max;
                 }
             }
-            console.log("leftover is" + leftover);
+            if (leftover == 1) {
+                neighborhoods[Math.random() * neighborhoods.length] += 1;
+                leftover = 0;
+            }
+            console.log("leftover is " + leftover);
         }
+
+        console.log("total population check:" +
+            neighborhoods.reduce((a, b) => a + b, 0)
+        );
         return neighborhoods;
     }
 }
