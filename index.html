@@ -19,7 +19,8 @@
 <script>
 function startSimulation() {
     var percent_rate = document.getElementById("rate").value;
-    let cur_infections = 100;
+    let cur_infections = 0;
+    let initial_infection_rate = 0.01
     let infection_rate = 1 + (percent_rate / 100)
     console.log("infection rate is " + infection_rate);
     let max_radius = 50;
@@ -30,7 +31,13 @@ function startSimulation() {
     let rows_cols = Math.sqrt(num_neighborhoods);
 
     //represents the number of infections in each neighborhood
-    var infections_in_neighborhoods = distribute_add(Array(num_neighborhoods).fill(0), cur_infections);
+    var infections_in_neighborhoods = Array(num_neighborhoods).fill(0);
+    //initialize infections in neighborhoods
+    for (let i = 0; i < infections_in_neighborhoods.length; i++) {
+        infections_in_neighborhoods[i] = Math.ceil(initial_infection_rate * neighborhood_populations[i]);
+        cur_infections += infections_in_neighborhoods[i];
+    }
+    console.log(infections_in_neighborhoods);
     var points = [];
 
     //dimensions of the grid, assumed to be a square.
@@ -156,8 +163,6 @@ function startSimulation() {
         var neighborhoods = Array(num_neighborhoods).fill(min);
         var pop_to_be_filled = population - num_neighborhoods * min;
         neighborhoods = distribute_add(neighborhoods, pop_to_be_filled);
-        console.log("neighborhood populations before max is ");
-        console.log(neighborhoods);
         // enforce max, check for leftovers.
         var leftover = 0;
         for (let i = 0; i < neighborhoods.length; i++) {
