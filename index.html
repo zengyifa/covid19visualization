@@ -26,18 +26,16 @@ function startSimulation() {
     let population = 100000;
     //assuming num_neighborhoods is a perfect square
     let num_neighborhoods = 400;
+    let neighborhood_populations = distribute_population(10, 400);
+    console.log("neighborhood populations is ");
+    console.log(neighborhood_populations);
     let pop_per_neighborhood = population / num_neighborhoods;
     console.log("population per neighborhood is " + pop_per_neighborhood);
     let rows_cols = Math.sqrt(num_neighborhoods);
 
     //represents the number of infections in each neighborhood
-    var infections_in_neighborhoods = distribute(num_neighborhoods, cur_infections);
-    console.log(infections_in_neighborhoods);
+    var infections_in_neighborhoods = distribute_add(Array(num_neighborhoods).fill(0), cur_infections);
     var points = [];
-    //current set of points that have been infected to the max.
-    var full_points = new Set();
-    //current set of non-full points
-    var cur_points = new Set();
 
     //dimensions of the grid, assumed to be a square.
     var gridSize = rows_cols * max_radius;
@@ -64,7 +62,6 @@ function startSimulation() {
         var radius = infections_in_neighborhoods[i] / pop_per_neighborhood * max_radius;
         addPoint(radius);
     }
-    cur_points = new Set(points);
 
 
     var tick = setInterval(update, 100);
@@ -109,12 +106,8 @@ function startSimulation() {
         cur_infections = cur_infections + num_new_infections;
         // console.log("cur infections is now " + cur_infections);
 
-        let new_infections_array = distribute(num_neighborhoods, num_new_infections);
-        console.log(new_infections_array);
-        infections_in_neighborhoods = infections_in_neighborhoods.map(function (num, idx) {
-            return num + new_infections_array[idx];
-        });
-        console.log(infections_in_neighborhoods);
+        infections_in_neighborhoods = distribute_add(infections_in_neighborhoods, num_new_infections);
+
         //make this select some
         var point = svg.selectAll(".point")
             .data(pointGrid(points));
@@ -127,23 +120,68 @@ function startSimulation() {
                 d3.select(this).transition().attr("r", new_radius);
             }
         })
-        //need to get previous radius and multiply by factor related to new infections
-        // point.transition()
-        //     .attr("r", max_radius)
+
     }
 
     /**
      * distributes value into array of length length
-     * @param length of array to be distributed to
      * @param value to distribute
-     * @returns array of length length that sums up to value
+     * @return array of length length with randomly distributed value
      */
     function distribute(length, value) {
         if (length <= 1)
             return [value];
         var half = Math.floor(length / 2),
             dist = Math.floor(Math.random() * value);
-        return distribute(half, dist).concat(distribute(length - half, value - dist));
+        return distribute(half, dist).concat(distribute(length-half, value-dist));
+    }
+
+    /**
+     * distributes value to array
+     */
+    function distribute_add(array, value) {
+        var to_be_added = distribute(array.length, value);
+        return array.map(function (num, idx) {
+            return num + to_be_added[idx];
+        });
+    }
+
+    /**
+     * Distributes population to neighborhoods
+     */
+    function distribute_population(min, max) {
+        if (min * num_neighborhoods > population) {
+            throw new Error("minimum neighborhood population too high");
+        } else if (max * num_neighborhoods < population) {
+            throw new Error("maximum neighborhood population too low");
+        } else if (min > max) {
+            throw new Error("min neighborhood population can't be greater than max");
+        }
+        var neighborhoods = Array(num_neighborhoods).fill(min);
+        var pop_to_be_filled = population - num_neighborhoods * min;
+        neighborhoods = distribute_add(neighborhoods, pop_to_be_filled);
+        console.log("neighborhood populations before max is ");
+        console.log(neighborhoods);
+        // enforce max
+        var leftover = 0;
+        for (let i = 0; i < neighborhoods.length; i++) {
+            if (neighborhoods[i] > max) {
+                leftover += neighborhoods[i] - max;
+            }
+        }
+        //keep distributing leftover until it's 0 and everything is below max
+        while (leftover > 0) {
+            neighborhoods = distribute_add(neighborhoods, leftover);
+            leftover = 0;
+            for (let i = 0; i < neighborhoods.length; i++) {
+                if (neighborhoods[i] > max) {
+                    leftover += (max - neighborhoods[i]);
+                    neighborhoods[i] = max;
+                }
+            }
+            console.log("leftover is" + leftover);
+        }
+        return neighborhoods;
     }
 }
 
