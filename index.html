@@ -26,12 +26,14 @@
         <br/>
         <button onclick="startSimulation()">Start Simulation</button>
         <div>Total population:
-            <span id="population"> 100,000 </span>
+            <span id="population"> 100000 </span>
         </div>
         <div>
             Day Number: <span id="curDay">0</span>
         </div>
-
+        <div>
+            Number Infected: <span id="numInfected">0</span>
+        </div>
     </body>
 </head>
 <body>
@@ -39,9 +41,11 @@
 <script>
 var initialInfectionRate = document.getElementById("initialInfectionRate");
 var initialInfectionRateValue = document.getElementById("initialInfectionRateValue");
+var numInfected = document.getElementById("numInfected");
 // Update the current slider value (each time you drag the slider handle)
 initialInfectionRate.oninput = function() {
     initialInfectionRateValue.innerHTML = this.value + "%";
+    numInfected.innerHTML = Math.floor(this.value / 100 * parseInt(document.getElementById("population").innerHTML));
 }
 
 
@@ -148,6 +152,7 @@ function startSimulation() {
         })
         cur_days += 1;
         document.getElementById("curDay").innerHTML = cur_days;
+        numInfected.innerHTML = cur_infections;
     }
 
     /**
