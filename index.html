@@ -8,30 +8,59 @@
     </head>
     <title>Covid19 Visualization</title>
     <body>
-    <label for="rate">Infection Rate (between 0% to 100 %)</label>
-    <input type="text" id="rate">
-    <br/>
-    <button onclick="startSimulation()">Start Simulation</button>
+        <label for="rate">Infection Rate (between 0% to 100 %)</label>
+        <input type="number" id="rate" value = 5>
+        <br/>
+        <span>Initial infection rate (%):</span> <b id="initialInfectionRateValue">5%</b>
+        <br/>
+        0% <input id="initialInfectionRate" type="range" min="0" max="10" value="5"> 10%
+        <br/>
+        <label for="min">Minimum Neighborhood Population</label>
+        <input type="number" id="min" value=10>
+        <br />
+        <label for="max">Maximum Neighborhood Population</label>
+        <input type="number" id="max" value =400>
+        <br/>
+        <label for="numDays">Number of Days</label>
+        <input type="number" id="numDays" value = 10>
+        <br/>
+        <button onclick="startSimulation()">Start Simulation</button>
+        <div>Total population:
+            <span id="population"> 100,000 </span>
+        </div>
+        <div>
+            Day Number: <span id="curDay">0</span>
+        </div>
+
     </body>
 </head>
 <body>
 
 <script>
+var initialInfectionRate = document.getElementById("initialInfectionRate");
+var initialInfectionRateValue = document.getElementById("initialInfectionRateValue");
+// Update the current slider value (each time you drag the slider handle)
+initialInfectionRate.oninput = function() {
+    initialInfectionRateValue.innerHTML = this.value + "%";
+}
+
 
 function startSimulation() {
-    var percent_rate = document.getElementById("rate").value;
-    let infection_rate = 1 + (percent_rate / 100)
-    console.log("infection rate is " + infection_rate);
+    let infection_rate = 1 + (document.getElementById("rate").value / 100)
     let max_radius = 50;
     let population = 100000;
-    let initial_infection_rate = 0.01
+    let initial_infection_rate = (document.getElementById("initialInfectionRate").value / 100);
+    console.log("initial infection rate is " + initial_infection_rate);
     var cur_infections = Math.floor(initial_infection_rate * population);
     console.log("initial number of infections is " + cur_infections)
     //assuming num_neighborhoods is a perfect square
     let num_neighborhoods = 400;
-    let neighborhood_populations = distribute_population(10, 400);
+    let neighborhood_min = parseInt(document.getElementById("min").value);
+    let neighborhood_max = parseInt(document.getElementById("max").value);
+    let neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
     let rows_cols = Math.sqrt(num_neighborhoods);
-
+    let num_days = parseInt(document.getElementById("numDays").value);
+    var cur_days = 0;
     //represents the number of infections in each neighborhood
     let neighborhood_infections = Array(num_neighborhoods).fill(0);
     //represents the neighborhoods that aren't fully infected yet
@@ -44,7 +73,6 @@ function startSimulation() {
     distribute_infections(cur_infections);
     //initialize infections in neighborhoods
 
-    console.log(neighborhood_infections);
     var points = [];
 
     //dimensions of the grid, assumed to be a square.
@@ -91,9 +119,10 @@ function startSimulation() {
     }
 
     function update() {
+
+        console.log("day number " + cur_days);
         //check if everyone has been infected
-        if (cur_infections >= population) {
-            console.log("cur infections is " + cur_infections + " and has exceeded population");
+        if (cur_infections >= population || cur_days === num_days) {
             clearInterval(tick);
             return;
         }
@@ -117,7 +146,8 @@ function startSimulation() {
             var new_radius = Math.min(max_radius, (neighborhood_infections[i] / neighborhood_populations[i]) * max_radius);
             d3.select(this).transition().attr("r", new_radius);
         })
-
+        cur_days += 1;
+        document.getElementById("curDay").innerHTML = cur_days;
     }
 
     /**
@@ -149,16 +179,10 @@ function startSimulation() {
     function distribute_add_dict(dict, value) {
         var to_be_added = distribute(Object.keys(dict).length, value);
         var arrayIndex = 0;
-        console.log("to be added is ")
-        console.log(to_be_added);
-        console.log("dict is ")
-        console.log(dict);
         for (var dictKey in dict) {
             dict[dictKey] += to_be_added[arrayIndex];
             arrayIndex += 1;
         }
-        console.log("dict after addd is ");
-        console.log(dict);
         return dict;
     }
 
@@ -231,9 +255,6 @@ function startSimulation() {
                 delete cur_infectionable[i];
             }
         }
-        console.log("neighborhood_infections at beginning is " );
-        console.log(neighborhood_infections);
-        console.log("after first distribution, leftover is " + leftover);
         while (leftover > 0) {
             cur_infectionable = distribute_add_dict(cur_infectionable, leftover);
 
@@ -243,19 +264,13 @@ function startSimulation() {
                 if (cur_infectionable[i] >= neighborhood_populations[i]) {
                     leftover += (cur_infectionable[i] - neighborhood_populations[i]);
                     neighborhood_infections[i] = neighborhood_populations[i];
-                    console.log("deleting neighborhood " + i);
                     delete cur_infectionable[i];
                 }
             }
-            console.log("cur_infectionable is " );
-            console.log(cur_infectionable);
-            console.log("neighborhood infections is ");
-            console.log(neighborhood_infections);
             if (leftover === 1) {
                 let random_index = Math.floor(Math.random() * neighborhood_infections.length);
                 //search for a non-maxed neighborhood
                 while (neighborhood_infections[random_index] === neighborhood_populations[random_index]) {
-                    console.log("finding random index");
                     random_index = Math.floor(Math.random() * neighborhood_infections.length);
                 }
                 neighborhood_infections[random_index] += 1;
