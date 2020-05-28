@@ -1,0 +1,15 @@
+div.controls{
+    font-size:150%;
+    text-align: center;
+
+}
+
+.slider{
+    width:20%;
+}
+
+.myButton{
+    width:30%;
+    height:50px;
+    font-size:150%;
+}
