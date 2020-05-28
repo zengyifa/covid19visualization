@@ -1,7 +1,6 @@
-div.controls{
+.controls{
     font-size:150%;
     text-align: center;
-
 }
 
 .slider{
@@ -12,4 +11,19 @@ div.controls{
     width:30%;
     height:50px;
     font-size:150%;
+}
+
+.display_variables {
+    padding-top:2%;
+    font-size:150%;
+    text-align: center;
+}
+
+.visualization {
+    padding-left:25%;
+}
+#slider-range{
+    width:50%;
+    margin-left:30%;
+    text-align:center;
 }
