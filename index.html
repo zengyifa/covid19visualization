@@ -5,6 +5,7 @@
     <head>
         <script src="https://d3js.org/d3.v3.min.js"></script>
         <script type="text/javascript" src="d3-grid.js"></script>
+        <script type="text/javascript" src="util.js"></script>
         <link rel="stylesheet" href="index.css">
     </head>
     <title>Covid19 Visualization</title>
@@ -30,15 +31,15 @@
             <input id="max" type="range" class="slider">
             <span id="maxMax"></span>
             <br/>
-            <label for="numDays">Number of Days</label>
-            <input type="number" id="numDays" value = 10>
+            Number of Days:  <b id="numDaysValue"></b>
+            <br/>
+            1 <input id="numDays" class="slider" type="range" > <span id="maxDays"></span>
             <br/>
             <br />
             <button id="startButton" class="myButton" onclick="runSimulation()">Start Simulation</button>
         </div>
 
         <div class="display_variables">
-
             <div>Total population:
                 <span id="population"> 100000 </span>
             </div>
@@ -74,31 +75,37 @@ document.getElementById("maxValue").innerHTML = document.getElementById("max").v
 //assuming num_neighborhoods is a perfect square
 let neighborhood_min = parseInt(document.getElementById("min").value);
 let neighborhood_max = parseInt(document.getElementById("max").value);
-console.log("neighborhood min is " + neighborhood_min);
-console.log("neighborhood max is " + neighborhood_max);
+
 
 let neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
+document.getElementById("min").oninput = function() {
+    document.getElementById("minValue").innerHTML = this.value + " people";
+}
+
 document.getElementById("min").onmouseup = function() {
     document.getElementById("minValue").innerHTML = this.value + " people";
     neighborhood_min = parseInt(this.value);
     neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
-    calculateAndDistributeInfections((document.getElementById("initialInfectionRate").value) / 100);
+    distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
     updatePoints();
 }
 document.getElementById("min").ontouchend = function() {
     document.getElementById("minValue").innerHTML = this.value + " people";
     neighborhood_min = parseInt(this.value);
     neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
-    calculateAndDistributeInfections((document.getElementById("initialInfectionRate").value) / 100);
+    distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
     updatePoints();
 }
 
+document.getElementById("max").oninput = function() {
+    document.getElementById("maxValue").innerHTML = this.value + " people";
+}
 
 document.getElementById("max").onmouseup = function() {
     document.getElementById("maxValue").innerHTML = this.value + " people";
     neighborhood_max = parseInt(this.value);
     neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
-    calculateAndDistributeInfections((document.getElementById("initialInfectionRate").value) / 100);
+    distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
     updatePoints();
 }
 
@@ -106,17 +113,24 @@ document.getElementById("max").ontouchend = function() {
     document.getElementById("maxValue").innerHTML = this.value + " people";
     neighborhood_max = parseInt(this.value);
     neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
-    calculateAndDistributeInfections((document.getElementById("initialInfectionRate").value) / 100);
+    distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
     updatePoints();
 }
 
+let infection_rate = 1 + (document.getElementById("rate").value / 100);
 
 var cur_infections = 0;
 //represents the number of infections in each neighborhood
 let neighborhood_infections = Array(num_neighborhoods).fill(0);
 let cur_infectionable = Object.assign({},neighborhood_infections);
-calculateAndDistributeInfections((document.getElementById("initialInfectionRate").value) / 100);
+distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
 document.getElementById("numInfected").innerHTML = cur_infections;
+
+updateNumDaysUI();
+
+document.getElementById("numDays").oninput = function () {
+    document.getElementById("numDaysValue").innerHTML = this.value  + " days";
+}
 
 let max_radius = 50;
 //dimensions of the grid, assumed to be a square.
@@ -151,9 +165,13 @@ for (var i = 0; i < neighborhood_infections.length; i++) {
 
 
 
-
 document.getElementById("rate").oninput = function() {
     document.getElementById("infectionRateValue").innerHTML = this.value + "%";
+}
+
+document.getElementById("rate").onmouseup = function() {
+    infection_rate =  1 + (document.getElementById("rate").value / 100);
+    updateNumDaysUI();
 }
 
 // Update the current slider value (each time you drag the slider handle)
@@ -163,17 +181,26 @@ document.getElementById("initialInfectionRate").oninput = function() {
 }
 
 document.getElementById("initialInfectionRate").onmouseup = function() {
-    calculateAndDistributeInfections((document.getElementById("initialInfectionRate").value) / 100);
+    distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
+    updateNumDaysUI();
     updatePoints();
 }
 document.getElementById("initialInfectionRate").ontouchend = function() {
-    calculateAndDistributeInfections((document.getElementById("initialInfectionRate").value) / 100);
+    distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
+    updateNumDaysUI();
     updatePoints();
+}
+
+function updateNumDaysUI() {
+    document.getElementById("numDays").max = Math.ceil(getBaseLog(infection_rate, population / cur_infections));
+    document.getElementById("maxDays").innerHTML = document.getElementById("numDays").max;
+    document.getElementById("numDays").value = document.getElementById("numDays").max;
+    document.getElementById("numDaysValue").innerHTML = document.getElementById("numDays").value + " days";
 }
 /**
  * calculates and distributes infections to an emptny neighborhood
  **/
-function calculateAndDistributeInfections(infection_rate) {
+function distributeInitialInfections(infection_rate) {
     console.log("calling calculateAndDistributeInfections with rate " + infection_rate);
     neighborhood_infections = Array(num_neighborhoods).fill(0);
     cur_infectionable = Object.assign({},neighborhood_infections);
@@ -252,7 +279,6 @@ function distribute_add_dict(dict, value) {
  * Distributes population to neighborhoods
  */
 function distribute_population(min, max) {
-    //TODO: make a set of non-full neighborhoods so we can more easily distribute population to only the non-full ones.
     if (min * num_neighborhoods > population) {
         throw new Error("minimum neighborhood population too high");
     } else if (max * num_neighborhoods < population) {
@@ -262,33 +288,29 @@ function distribute_population(min, max) {
     }
     var neighborhoods = Array(num_neighborhoods).fill(min);
     var pop_to_be_filled = population - num_neighborhoods * min;
+    //represents non-full neighborhoods
     neighborhoods = distribute_add(neighborhoods, pop_to_be_filled);
+    var cur_populable = Object.assign({}, neighborhoods);
     // enforce max, check for leftovers.
     var leftover = 0;
-    for (let i = 0; i < neighborhoods.length; i++) {
-        if (neighborhoods[i] > max) {
-            leftover += (neighborhoods[i] - max);
+    for (var i in cur_populable) {
+        if (cur_populable[i] >= max) {
+            leftover += (cur_populable[i] - max);
             neighborhoods[i] = max;
+            delete cur_populable[i];
         }
     }
     //keep distributing leftover until it's 0 and everything is below max
     while (leftover > 0) {
-        neighborhoods = distribute_add(neighborhoods, leftover);
+        cur_populable = distribute_add_dict(cur_populable, leftover);
         leftover = 0;
-        for (let i = 0; i < neighborhoods.length; i++) {
-            if (neighborhoods[i] > max) {
-                leftover += (neighborhoods[i] - max);
+        for (var i in cur_populable) {
+            neighborhoods[i] = cur_populable[i];
+            if (cur_populable[i] >= max) {
+                leftover += (cur_populable[i] - max);
                 neighborhoods[i] = max;
+                delete cur_populable[i];
             }
-        }
-        if (leftover === 1) {
-            let random_index = Math.floor(Math.random() * neighborhoods.length);
-            //search for a non-maxed neighborhood
-            while (neighborhoods[random_index] === max) {
-                random_index = Math.floor(Math.random() * neighborhoods.length);
-            }
-            neighborhoods[random_index] += 1;
-            leftover = 0;
         }
         console.log("leftover is " + leftover);
     }
@@ -331,26 +353,16 @@ function distribute_infections(num_infections){
                 delete cur_infectionable[i];
             }
         }
-        if (leftover === 1) {
-            let random_index = Math.floor(Math.random() * neighborhood_infections.length);
-            //search for a non-maxed neighborhood
-            while (neighborhood_infections[random_index] === neighborhood_populations[random_index]) {
-                random_index = Math.floor(Math.random() * neighborhood_infections.length);
-            }
-            neighborhood_infections[random_index] += 1;
-            leftover = 0;
-        }
-        console.log("leftover is " + leftover);
     }
 }
 
 function runSimulation() {
-    let infection_rate = 1 + (document.getElementById("rate").value / 100)
-    let num_days = parseInt(document.getElementById("numDays").value);
+
     var cur_days = 0;
 
     var tick = setInterval(update, 100);
 
+    let num_days = parseInt(document.getElementById("numDays").value);
 
     function update() {
         //check if everyone has been infected
