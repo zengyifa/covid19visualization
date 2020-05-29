@@ -130,10 +130,11 @@ let cur_infectionable = Object.assign({},neighborhood_infections);
 distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
 document.getElementById("numInfected").innerHTML = cur_infections;
 
+var cur_days = 0;
+let num_days = 0;
 updateNumDaysUI();
 
-var cur_days = 0;
-let num_days = parseInt(document.getElementById("numDays").value);
+
 document.getElementById("numDays").oninput = function () {
     document.getElementById("numDaysValue").innerHTML = this.value  + " days";
     num_days = parseInt(this.value);
@@ -199,7 +200,8 @@ function updateNumDaysUI() {
     document.getElementById("numDays").max = Math.ceil(getBaseLog(infection_rate, population / cur_infections));
     document.getElementById("maxDays").innerHTML = document.getElementById("numDays").max;
     document.getElementById("numDays").value = document.getElementById("numDays").max;
-    document.getElementById("numDaysValue").innerHTML = document.getElementById("numDays").value + " days";
+    num_days = document.getElementById("numDays").value;
+    document.getElementById("numDaysValue").innerHTML = num_days + " days";
 }
 /**
  * calculates and distributes infections to an empty neighborhood
