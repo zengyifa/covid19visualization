@@ -35,7 +35,10 @@
             <br/>
             1 <input id="numDays" class="slider" type="range" > <span id="maxDays"></span>
             <br/>
-            <br />
+            Simulation Speed:  <b id="speedValue">50%</b>
+            <br/>
+            1% <input id="speed" class="slider" type="range" min="1" max="100" value="50"> 100%
+            <br/>
             <button id="startButton" class="myButton" onclick="runSimulation()">Start Simulation</button>
         </div>
 
@@ -59,18 +62,29 @@
 let num_neighborhoods = 400;
 let rows_cols = Math.sqrt(num_neighborhoods);
 let population = 100000;
+let simulation_speed = Math.floor(1 / (document.getElementById("speed").value / 100) * 100);
+var tick = 0;
+var running = false;
+document.getElementById("speed").oninput = function() {
+    document.getElementById("speedValue").innerHTML = this.value +"%";
+    simulation_speed = Math.floor(1 / (document.getElementById("speed").value / 100) * 100);
+    if (running === true) {
+        clearInterval(tick);
+        tick = setInterval(update, simulation_speed);
+    }
+}
 
 document.getElementById("min").max = Math.floor(population / num_neighborhoods);
 document.getElementById("maxMin").innerHTML = document.getElementById("min").max;
 document.getElementById("min").value = (document.getElementById("min").max - document.getElementById("min").min) / 2;
 document.getElementById("minValue").innerHTML = document.getElementById("min").value + " people";
-
 document.getElementById("max").max = population - (num_neighborhoods - 1);
 document.getElementById("maxMax").innerHTML = document.getElementById("max").max;
 document.getElementById("max").min = Math.ceil(population / num_neighborhoods);
 document.getElementById("minMax").innerHTML = document.getElementById("max").min;
 document.getElementById("max").value = (document.getElementById("max").max - document.getElementById("max").min) / 2
 document.getElementById("maxValue").innerHTML = document.getElementById("max").value + " people";
+
 
 //assuming num_neighborhoods is a perfect square
 let neighborhood_min = parseInt(document.getElementById("min").value);
@@ -201,7 +215,6 @@ function updateNumDaysUI() {
  * calculates and distributes infections to an emptny neighborhood
  **/
 function distributeInitialInfections(infection_rate) {
-    console.log("calling calculateAndDistributeInfections with rate " + infection_rate);
     neighborhood_infections = Array(num_neighborhoods).fill(0);
     cur_infectionable = Object.assign({},neighborhood_infections);
     cur_infections = Math.floor(infection_rate * population);
@@ -355,33 +368,29 @@ function distribute_infections(num_infections){
         }
     }
 }
+var cur_days = 0;
+let num_days = parseInt(document.getElementById("numDays").value);
 
 function runSimulation() {
-
-    var cur_days = 0;
-
-    var tick = setInterval(update, 100);
-
-    let num_days = parseInt(document.getElementById("numDays").value);
-
-    function update() {
-        //check if everyone has been infected
-        if (cur_infections >= population || cur_days === num_days) {
-            clearInterval(tick);
-            return;
-        }
-        let num_new_infections = Math.min(population - cur_infections, Math.floor(infection_rate * cur_infections - cur_infections));
-
-        cur_infections = cur_infections + num_new_infections;
-        console.log("cur infections is currently " + cur_infections);
-        distribute_infections(num_new_infections);
-        updatePoints();
-        cur_days += 1;
-        document.getElementById("curDay").innerHTML = cur_days;
-        document.getElementById("numInfected").innerHTML = cur_infections;
+    tick = setInterval(update, simulation_speed);
+}
+function update() {
+    running = true;
+    //check if everyone has been infected
+    if (cur_infections >= population || cur_days === num_days) {
+        clearInterval(tick);
+        running = false;
+        return;
     }
+    let num_new_infections = Math.min(population - cur_infections, Math.floor(infection_rate * cur_infections - cur_infections));
 
-
+    cur_infections = cur_infections + num_new_infections;
+    console.log("cur infections is currently " + cur_infections);
+    distribute_infections(num_new_infections);
+    updatePoints();
+    cur_days += 1;
+    document.getElementById("curDay").innerHTML = cur_days;
+    document.getElementById("numInfected").innerHTML = cur_infections;
 }
 
 </script>
