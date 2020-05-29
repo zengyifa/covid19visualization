@@ -336,6 +336,10 @@ function nextDay() {
     update();
 }
 function runSimulation() {
+    document.getElementById("initialInfectionRate").disabled = true;
+    document.getElementById("min").disabled = true;
+    document.getElementById("max").disabled = true;
+    document.getElementById("numDays").disabled = true;
     tick = setInterval(update, simulation_speed);
 }
 function update() {
