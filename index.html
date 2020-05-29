@@ -40,6 +40,7 @@
             1% <input id="speed" class="slider" type="range" min="1" max="100" value="50"> 100%
             <br/>
             <button id="startButton" class="myButton" onclick="runSimulation()">Start Simulation</button>
+            <button id="nextDay" class="myButton" onclick="nextDay()">Next Day </button>
         </div>
 
         <div class="display_variables">
@@ -62,17 +63,6 @@
 let num_neighborhoods = 400;
 let rows_cols = Math.sqrt(num_neighborhoods);
 let population = 100000;
-let simulation_speed = Math.floor(1 / (document.getElementById("speed").value / 100) * 100);
-var tick = 0;
-var running = false;
-document.getElementById("speed").oninput = function() {
-    document.getElementById("speedValue").innerHTML = this.value +"%";
-    simulation_speed = Math.floor(1 / (document.getElementById("speed").value / 100) * 100);
-    if (running === true) {
-        clearInterval(tick);
-        tick = setInterval(update, simulation_speed);
-    }
-}
 
 document.getElementById("min").max = Math.floor(population / num_neighborhoods);
 document.getElementById("maxMin").innerHTML = document.getElementById("min").max;
@@ -177,8 +167,6 @@ for (var i = 0; i < neighborhood_infections.length; i++) {
     addPoint(radius);
 }
 
-
-
 document.getElementById("rate").oninput = function() {
     document.getElementById("infectionRateValue").innerHTML = this.value + "%";
 }
@@ -212,7 +200,7 @@ function updateNumDaysUI() {
     document.getElementById("numDaysValue").innerHTML = document.getElementById("numDays").value + " days";
 }
 /**
- * calculates and distributes infections to an emptny neighborhood
+ * calculates and distributes infections to an empty neighborhood
  **/
 function distributeInitialInfections(infection_rate) {
     neighborhood_infections = Array(num_neighborhoods).fill(0);
@@ -223,8 +211,6 @@ function distributeInitialInfections(infection_rate) {
     var sum = neighborhood_infections.reduce(function(a, b){
         return a + b;
     }, 0);
-    console.log("total infected is now ");
-    console.log(sum);
 }
 
 function addPoint(radius) {
@@ -249,43 +235,6 @@ function updatePoints() {
         var new_radius = Math.min(max_radius, (neighborhood_infections[i] / neighborhood_populations[i]) * max_radius);
         d3.select(this).transition().attr("r", new_radius);
     })
-}
-
-
-/**
- * distributes value into array of length length
- * @param value to distribute
- * @return array of length length with randomly distributed value
- */
-function distribute(length, value) {
-    if (length <= 1)
-        return [value];
-    var half = Math.floor(length / 2),
-        dist = Math.floor(Math.random() * value);
-    return distribute(half, dist).concat(distribute(length-half, value-dist));
-}
-
-/**
- * distributes value to array
- */
-function distribute_add(array, value) {
-    var to_be_added = distribute(array.length, value);
-    return array.map(function (num, idx) {
-        return num + to_be_added[idx];
-    });
-}
-
-/**
- * distributes value to values in dictionary
- */
-function distribute_add_dict(dict, value) {
-    var to_be_added = distribute(Object.keys(dict).length, value);
-    var arrayIndex = 0;
-    for (var dictKey in dict) {
-        dict[dictKey] += to_be_added[arrayIndex];
-        arrayIndex += 1;
-    }
-    return dict;
 }
 
 /**
@@ -370,7 +319,22 @@ function distribute_infections(num_infections){
 }
 var cur_days = 0;
 let num_days = parseInt(document.getElementById("numDays").value);
+let simulation_speed = Math.floor(1 / (document.getElementById("speed").value / 100) * 100);
 
+var tick = 0;
+var running = false;
+
+document.getElementById("speed").oninput = function() {
+    document.getElementById("speedValue").innerHTML = this.value +"%";
+    simulation_speed = Math.floor(1 / (document.getElementById("speed").value / 100) * 100);
+    if (running === true) {
+        clearInterval(tick);
+        tick = setInterval(update, simulation_speed);
+    }
+}
+function nextDay() {
+    update();
+}
 function runSimulation() {
     tick = setInterval(update, simulation_speed);
 }
