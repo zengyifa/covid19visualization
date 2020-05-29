@@ -173,11 +173,14 @@ for (var i = 0; i < neighborhood_infections.length; i++) {
 
 document.getElementById("rate").oninput = function() {
     document.getElementById("infectionRateValue").innerHTML = this.value + "%";
+    infection_rate =  1 + (document.getElementById("rate").value / 100);
 }
 
 document.getElementById("rate").onmouseup = function() {
     infection_rate =  1 + (document.getElementById("rate").value / 100);
-    updateNumDaysUI();
+    if (document.getElementById("numDays").disabled === false) {
+        updateNumDaysUI();
+    }
 }
 
 document.getElementById("initialInfectionRate").oninput = function() {
