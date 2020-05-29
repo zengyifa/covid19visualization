@@ -132,8 +132,11 @@ document.getElementById("numInfected").innerHTML = cur_infections;
 
 updateNumDaysUI();
 
+var cur_days = 0;
+let num_days = parseInt(document.getElementById("numDays").value);
 document.getElementById("numDays").oninput = function () {
     document.getElementById("numDaysValue").innerHTML = this.value  + " days";
+    num_days = parseInt(this.value);
 }
 
 let max_radius = 50;
@@ -176,7 +179,6 @@ document.getElementById("rate").onmouseup = function() {
     updateNumDaysUI();
 }
 
-// Update the current slider value (each time you drag the slider handle)
 document.getElementById("initialInfectionRate").oninput = function() {
     document.getElementById("initialInfectionRateValue").innerHTML = this.value + "%";
     document.getElementById("numInfected").innerHTML = Math.floor(this.value / 100 * parseInt(document.getElementById("population").innerHTML));
@@ -317,8 +319,7 @@ function distribute_infections(num_infections){
         }
     }
 }
-var cur_days = 0;
-let num_days = parseInt(document.getElementById("numDays").value);
+
 let simulation_speed = Math.floor(1 / (document.getElementById("speed").value / 100) * 100);
 
 var tick = 0;
@@ -345,7 +346,7 @@ function runSimulation() {
 function update() {
     running = true;
     //check if everyone has been infected
-    if (cur_infections >= population || cur_days === num_days) {
+    if (cur_infections >= population || cur_days >= num_days) {
         clearInterval(tick);
         running = false;
         return;
