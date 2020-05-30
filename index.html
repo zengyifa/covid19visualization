@@ -44,10 +44,10 @@
             Maximum Neighborhood Population <b>(<span id="maxValue">2750 people</span>)</b>:
             500 <input id="max" type="range" min="500" max="5000" value="2750" class="slider"> 5000
             <br/>
-            Number of Days:  <b id="numDaysValue"></b>
+            Number of Days <b>(<span id="numDaysValue"></span>)</b>:
             1 <input id="numDays" class="slider" type="range" > <span id="maxDays"></span>
             &emsp;
-            Simulation Speed:  <b id="speedValue">50%</b>
+            Simulation Speed <b>(<span id="speedValue">50%</span>)</b> :
             1% <input id="speed" class="slider" type="range" min="1" max="100" value="50"> 100%
         </div>
 
@@ -360,21 +360,41 @@ document.getElementById("speed").oninput = function() {
     }
 }
 function nextDay() {
-    update();
+    if (cur_infections < population) {
+        let num_new_infections = Math.min(population - cur_infections, Math.floor(infection_rate * cur_infections - cur_infections));
+        cur_infections = cur_infections + num_new_infections;
+        console.log("cur infections is currently " + cur_infections);
+        distribute_infections(num_new_infections);
+        updatePoints();
+        cur_days += 1;
+        document.getElementById("curDay").innerHTML = cur_days;
+        document.getElementById("numInfected").innerHTML = cur_infections;
+    }
 }
+
+var reachedEnd = false;
 
 function runSimulation() {
     if (running === false) {
-        running = true;
-        updatePoints();
-        document.getElementById("initialInfectionRate").disabled = true;
-        document.getElementById("min").disabled = true;
-        document.getElementById("max").disabled = true;
-        document.getElementById("numDays").disabled = true;
-        document.getElementById("nextDay").disabled = true;
-        tick = setInterval(update, simulation_speed);
+        if (reachedEnd === false) {
+            running = true;
+            disableControls();
+            tick = setInterval(update, simulation_speed);
+        } else {
+            //this is if user clicked the button when it said "new simulation"
+            reachedEnd = false;
+            cur_days = 0;
+            neighborhood_infections = Array(num_neighborhoods).fill(0);
+            cur_infectionable = Object.assign({},neighborhood_infections);
+            distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
+            updatePoints();
+            enableControls();
+            updateDisplayVariables();
+            document.getElementById("startButton").innerHTML = "Start Simulation";
+        }
     }
 }
+
 function update() {
     //check if everyone has been infected
     if (cur_infections >= population || cur_days >= num_days) {
@@ -388,26 +408,43 @@ function update() {
     distribute_infections(num_new_infections);
     updatePoints();
     cur_days += 1;
+    updateDisplayVariables();
+}
+function updateDisplayVariables() {
     document.getElementById("curDay").innerHTML = cur_days;
     document.getElementById("numInfected").innerHTML = cur_infections;
 }
-
 /**
  * Happens at the end of the simulation
  */
-function gitreset() {
+function reset() {
     clearInterval(tick);
+    reachedEnd = true;
     running = false;
+    document.getElementById("startButton").innerHTML="New Simulation";
+    document.getElementById("startButton").disabled = false;
+    if (cur_infections < population) {
+        document.getElementById("nextDay").disabled = false;
+    }
+}
+function enableControls() {
     document.getElementById("initialInfectionRate").disabled = false;
     document.getElementById("min").disabled = false;
     document.getElementById("max").disabled = false;
     document.getElementById("numDays").disabled = false;
     document.getElementById("nextDay").disabled = false;
-    cur_days = 0;
-    //distribute infections based on initial infection rate
-    neighborhood_infections = Array(num_neighborhoods).fill(0);
-    cur_infectionable = Object.assign({},neighborhood_infections);
-    distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
+}
+
+/**
+ * disables controls that shouldn't be changed when simulation is running
+ */
+function disableControls() {
+    document.getElementById("startButton").disabled = true;
+    document.getElementById("initialInfectionRate").disabled = true;
+    document.getElementById("min").disabled = true;
+    document.getElementById("max").disabled = true;
+    document.getElementById("numDays").disabled = true;
+    document.getElementById("nextDay").disabled = true;
 }
 </script>
 </body>
