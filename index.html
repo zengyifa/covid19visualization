@@ -6,6 +6,7 @@
         <script src="https://d3js.org/d3.v3.min.js"></script>
         <script type="text/javascript" src="d3-grid.js"></script>
         <script type="text/javascript" src="util.js"></script>
+        <script type="text/javascript" src="constants.js"></script>
         <link rel="stylesheet" href="index.css">
     </head>
     <title>Covid19 Visualization</title>
@@ -58,10 +59,7 @@
 
 <script>
 
-let num_neighborhoods = 400;
 let rows_cols = Math.sqrt(num_neighborhoods);
-let population = 100000;
-
 document.getElementById("minValue").innerHTML = document.getElementById("min").value + " people";
 document.getElementById("maxValue").innerHTML = document.getElementById("max").value + " people";
 
@@ -77,6 +75,7 @@ document.getElementById("min").onmouseup = function() {
     document.getElementById("minValue").innerHTML = this.value + " people";
     neighborhood_min = parseInt(this.value);
     neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
+    updateRects();
     distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
     updatePoints();
 }
@@ -84,6 +83,7 @@ document.getElementById("min").ontouchend = function() {
     document.getElementById("minValue").innerHTML = this.value + " people";
     neighborhood_min = parseInt(this.value);
     neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
+    updateRects();
     distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
     updatePoints();
 }
@@ -96,6 +96,7 @@ document.getElementById("max").onmouseup = function() {
     document.getElementById("maxValue").innerHTML = this.value + " people";
     neighborhood_max = parseInt(this.value);
     neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
+    updateRects();
     distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
     updatePoints();
 }
@@ -104,6 +105,7 @@ document.getElementById("max").ontouchend = function() {
     document.getElementById("maxValue").innerHTML = this.value + " people";
     neighborhood_max = parseInt(this.value);
     neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
+    updateRects();
     distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
     updatePoints();
 }
@@ -160,7 +162,7 @@ var svg = d3.select(".vis").append("svg")
 
 for (var i = 0; i < neighborhood_infections.length; i++) {
     let radius = neighborhood_infections[i] / neighborhood_populations[i] * max_radius;
-    addNeighborhood(radius);
+    addNeighborhood(neighborhood_populations[i],radius);
 }
 
 document.getElementById("rate").oninput = function() {
@@ -207,17 +209,28 @@ function distributeInitialInfections(infection_rate) {
     cur_infections = Math.floor(infection_rate * population);
     distribute_infections(cur_infections);
 }
-function addNeighborhood(radius) {
+/**
+ * Gets the corresponding grayscale color for a neighborhood population
+ **/
+function get_color_for_population(population) {
+    for (const scale of population_to_grayscale_color) {
+        if (population >= scale["min"] && population <= scale["max"]) {
+            return scale["color"];
+        }
+    }
+}
+function addNeighborhood(population, radius) {
     rects.push({});
     var rectangles = svg.selectAll("g")
         .data(rectGrid(rects))
         .enter()
         .append("g");
+
     rectangles.append("rect")
         .attr("width", max_radius * 2)
         .attr("height", max_radius * 2)
         .attr("class", "rect")
-        .attr("fill", "transparent")
+        .attr("fill", get_color_for_population(population))
         .attr("stroke", "black")
         .attr("stroke-opacity","0.1")
         .attr("transform", function (d) {
@@ -232,6 +245,14 @@ function addNeighborhood(radius) {
         .attr("fill", "red");
 }
 
+function updateRects() {
+    var rect = svg.selectAll(".rect")
+        .data(rectGrid(rects));
+    rect.each(function (d, i) {
+        var new_color = get_color_for_population(neighborhood_populations[i])
+        d3.select(this).transition().attr("fill", new_color);
+    })
+}
 /**
  * updates points according to infection densities
  **/
@@ -374,7 +395,7 @@ function update() {
 /**
  * Happens at the end of the simulation
  */
-function reset() {
+function gitreset() {
     clearInterval(tick);
     running = false;
     document.getElementById("initialInfectionRate").disabled = false;
