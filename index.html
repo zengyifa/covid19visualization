@@ -10,50 +10,48 @@
     </head>
     <title>Covid19 Visualization</title>
     <body>
-        <div class="controls">
-            Initial infection rate (%): <b id="initialInfectionRateValue">5%</b>
-            <br/>
-            0% <input id="initialInfectionRate" class="slider" type="range" min="0" max="10" value="5"> 10%
-            <br/>
-            Simulation Infection Rate (%) : <b id="infectionRateValue">10%</b>
-            <br />
-            0% <input id="rate" class="slider" type="range"  min="0" max="100" value = 10> 100%
-            <br/>
-            Minimum Neighborhood Population: <b id="minValue">10 people</b>
-            <br />
-            1
-            <input id="min" class="slider" type="range" min="1" value=10>
-            <span id="maxMin"></span>
-            <br />
-            Maximum Neighborhood Population: <b id="maxValue"></b>
-            <br />
-            <span id="minMax"></span>
-            <input id="max" type="range" class="slider">
-            <span id="maxMax"></span>
-            <br/>
-            Number of Days:  <b id="numDaysValue"></b>
-            <br/>
-            1 <input id="numDays" class="slider" type="range" > <span id="maxDays"></span>
-            <br/>
-            Simulation Speed:  <b id="speedValue">50%</b>
-            <br/>
-            1% <input id="speed" class="slider" type="range" min="1" max="100" value="50"> 100%
-            <br/>
-            <button id="startButton" class="myButton" onclick="runSimulation()">Start Simulation</button>
-            <button id="nextDay" class="myButton" onclick="nextDay()">Next Day </button>
+        <div class="container">
+            <div class="controls">
+                <button id="startButton" class="myButton" onclick="runSimulation()">Start Simulation</button>
+                <br/>
+                <button id="nextDay" class="myButton" onclick="nextDay()">Next Day </button>
+            </div>
+            <div class="vis"></div>
+            <div class="display_variables">
+                <div>Total population:
+                    <span id="population"> 100000 </span>
+                </div>
+                <div>
+                    Day Number: <span id="curDay">0</span>
+                </div>
+                <div>
+                    Number Infected: <span id="numInfected">0</span>
+                </div>
+            </div>
         </div>
 
-        <div class="display_variables">
-            <div>Total population:
-                <span id="population"> 100000 </span>
-            </div>
-            <div>
-                Day Number: <span id="curDay">0</span>
-            </div>
-            <div>
-                Number Infected: <span id="numInfected">0</span>
-            </div>
+        <div class="parameters">
+            Initial infection rate <b>(<span id="initialInfectionRateValue">5%</span>)</b>:
+            0% <input id="initialInfectionRate" class="slider" type="range" min="0" max="10" step="0.1" value="5"> 10%
+            &emsp;
+            Simulation Infection Rate <b>(<span id="infectionRateValue">10%</span>)</b>:
+            0% <input id="rate" class="slider" type="range"  min="0" max="25" value = 10> 25%
+            <br/>
+            Minimum Neighborhood Population <b>(<span id="minValue">55 people</span>)</b>:
+            10 <input id="min" class="slider" type="range" min="10" max="100" value=55> 100
+            &emsp;
+            Maximum Neighborhood Population <b>(<span id="maxValue">2750 people</span>)</b>:
+            500 <input id="max" type="range" min="500" max="5000" value="2750" class="slider"> 5000
+            <br/>
+            Number of Days:  <b id="numDaysValue"></b>
+            1 <input id="numDays" class="slider" type="range" > <span id="maxDays"></span>
+            &emsp;
+            Simulation Speed:  <b id="speedValue">50%</b>
+            1% <input id="speed" class="slider" type="range" min="1" max="100" value="50"> 100%
         </div>
+
+
+
     </body>
 </head>
 <body>
@@ -64,23 +62,12 @@ let num_neighborhoods = 400;
 let rows_cols = Math.sqrt(num_neighborhoods);
 let population = 100000;
 
-document.getElementById("min").max = Math.floor(population / num_neighborhoods);
-document.getElementById("maxMin").innerHTML = document.getElementById("min").max;
-document.getElementById("min").value = (document.getElementById("min").max - document.getElementById("min").min) / 2;
 document.getElementById("minValue").innerHTML = document.getElementById("min").value + " people";
-document.getElementById("max").max = population - (num_neighborhoods - 1);
-document.getElementById("maxMax").innerHTML = document.getElementById("max").max;
-document.getElementById("max").min = Math.ceil(population / num_neighborhoods);
-document.getElementById("minMax").innerHTML = document.getElementById("max").min;
-document.getElementById("max").value = (document.getElementById("max").max - document.getElementById("max").min) / 2
 document.getElementById("maxValue").innerHTML = document.getElementById("max").value + " people";
-
 
 //assuming num_neighborhoods is a perfect square
 let neighborhood_min = parseInt(document.getElementById("min").value);
 let neighborhood_max = parseInt(document.getElementById("max").value);
-
-
 let neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
 document.getElementById("min").oninput = function() {
     document.getElementById("minValue").innerHTML = this.value + " people";
@@ -142,10 +129,10 @@ document.getElementById("numDays").oninput = function () {
 
 let max_radius = 50;
 //dimensions of the grid, assumed to be a square.
-let gridSize = rows_cols * max_radius;
+let gridSize = max_radius * rows_cols;
 //svg dimensions
-let width = gridSize * 2,
-    height = gridSize * 2;
+ let width = gridSize * 1.15,
+     height = gridSize * 1.15;
 
 var points = [];
 
@@ -156,7 +143,7 @@ let pointGrid = d3.layout.grid()
     .rows([rows_cols])
     .cols([rows_cols]);
 
-var svg = d3.select("body").append("svg")
+var svg = d3.select(".vis").append("svg")
     .attr({
         width: width,
         height: height
@@ -227,6 +214,7 @@ function addPoint(radius) {
     point.enter().append("circle")
         .attr("class", "point")
         .attr("r", radius)
+        .attr("fill", "red")
         .attr("transform", function (d) {
             return "translate(" + d.x + "," + d.y + ")";
         });
