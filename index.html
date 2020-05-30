@@ -127,18 +127,24 @@ document.getElementById("numDays").oninput = function () {
     num_days = parseInt(this.value);
 }
 
-let max_radius = 50;
+let max_radius = 25;
 //dimensions of the grid, assumed to be a square.
-let gridSize = max_radius * rows_cols;
+let gridSize = max_radius * rows_cols * 2;
 //svg dimensions
  let width = gridSize * 1.15,
      height = gridSize * 1.15;
 
-var points = [];
-
+// var points = [];
+var rects = [];
 //grid dimensions
-let pointGrid = d3.layout.grid()
-    .points()
+// let pointGrid = d3.layout.grid()
+//     .points()
+//     .size([gridSize, gridSize])
+//     .rows([rows_cols])
+//     .cols([rows_cols])
+
+var rectGrid = d3.layout.grid()
+    .bands()
     .size([gridSize, gridSize])
     .rows([rows_cols])
     .cols([rows_cols]);
@@ -149,13 +155,12 @@ var svg = d3.select(".vis").append("svg")
         height: height
     })
     .attr("class", "visualization")
-    .append("g")
     .attr("transform", "translate(70,70)");
 
 
 for (var i = 0; i < neighborhood_infections.length; i++) {
     let radius = neighborhood_infections[i] / neighborhood_populations[i] * max_radius;
-    addPoint(radius);
+    addNeighborhood(radius);
 }
 
 document.getElementById("rate").oninput = function() {
@@ -202,18 +207,29 @@ function distributeInitialInfections(infection_rate) {
     cur_infections = Math.floor(infection_rate * population);
     distribute_infections(cur_infections);
 }
-
-function addPoint(radius) {
-    points.push({});
-    var point = svg.selectAll(".point")
-        .data(pointGrid(points));
-    point.enter().append("circle")
-        .attr("class", "point")
-        .attr("r", radius)
-        .attr("fill", "red")
+function addNeighborhood(radius) {
+    rects.push({});
+    var rectangles = svg.selectAll("g")
+        .data(rectGrid(rects))
+        .enter()
+        .append("g");
+    rectangles.append("rect")
+        .attr("width", max_radius * 2)
+        .attr("height", max_radius * 2)
+        .attr("class", "rect")
+        .attr("fill", "transparent")
+        .attr("stroke", "black")
+        .attr("stroke-opacity","0.1")
         .attr("transform", function (d) {
             return "translate(" + d.x + "," + d.y + ")";
         });
+
+    rectangles.append("circle")
+        .attr("class", "point")
+        .attr("cx", function (d) { return d.x+(max_radius) ; })
+        .attr("cy", function (d) { return d.y+(max_radius); })
+        .attr("r", radius)
+        .attr("fill", "red");
 }
 
 /**
@@ -221,7 +237,7 @@ function addPoint(radius) {
  **/
 function updatePoints() {
     var point = svg.selectAll(".point")
-        .data(pointGrid(points));
+        .data(rectGrid(rects));
     point.each(function (d, i) {
         var new_radius = Math.min(max_radius, (neighborhood_infections[i] / neighborhood_populations[i]) * max_radius);
         d3.select(this).transition().attr("r", new_radius);
