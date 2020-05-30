@@ -47,8 +47,8 @@
             Number of Days <b>(<span id="numDaysValue"></span>)</b>:
             1 <input id="numDays" class="slider" type="range" > <span id="maxDays"></span>
             &emsp;
-            Simulation Speed <b>(<span id="speedValue">50%</span>)</b> :
-            1% <input id="speed" class="slider" type="range" min="1" max="100" value="50"> 100%
+            Simulation Speed <b>(<span id="speedValue">10 days per second</span>)</b> :
+            1 <input id="speed" class="slider" type="range" min="1" max="10" value="10"> 10
         </div>
 
 
@@ -346,7 +346,7 @@ function distribute_infections(num_infections){
     }
 }
 
-let simulation_speed = Math.floor(1 / (document.getElementById("speed").value / 100) * 100);
+let simulation_speed = 1000 / parseInt(document.getElementById("speed").value);
 
 var tick = 0;
 var running = false;
