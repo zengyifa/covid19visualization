@@ -194,17 +194,13 @@ function updateNumDaysUI() {
     document.getElementById("numDaysValue").innerHTML = num_days + " days";
 }
 /**
- * calculates and distributes infections to an empty neighborhood
+ * calculates and distributes infections to clean neighborhoods
  **/
 function distributeInitialInfections(infection_rate) {
     neighborhood_infections = Array(num_neighborhoods).fill(0);
     cur_infectionable = Object.assign({},neighborhood_infections);
     cur_infections = Math.floor(infection_rate * population);
     distribute_infections(cur_infections);
-
-    var sum = neighborhood_infections.reduce(function(a, b){
-        return a + b;
-    }, 0);
 }
 
 function addPoint(radius) {
@@ -329,19 +325,23 @@ document.getElementById("speed").oninput = function() {
 function nextDay() {
     update();
 }
+
 function runSimulation() {
-    document.getElementById("initialInfectionRate").disabled = true;
-    document.getElementById("min").disabled = true;
-    document.getElementById("max").disabled = true;
-    document.getElementById("numDays").disabled = true;
-    tick = setInterval(update, simulation_speed);
+    if (running === false) {
+        running = true;
+        updatePoints();
+        document.getElementById("initialInfectionRate").disabled = true;
+        document.getElementById("min").disabled = true;
+        document.getElementById("max").disabled = true;
+        document.getElementById("numDays").disabled = true;
+        document.getElementById("nextDay").disabled = true;
+        tick = setInterval(update, simulation_speed);
+    }
 }
 function update() {
-    running = true;
     //check if everyone has been infected
     if (cur_infections >= population || cur_days >= num_days) {
-        clearInterval(tick);
-        running = false;
+        reset();
         return;
     }
     let num_new_infections = Math.min(population - cur_infections, Math.floor(infection_rate * cur_infections - cur_infections));
@@ -355,6 +355,23 @@ function update() {
     document.getElementById("numInfected").innerHTML = cur_infections;
 }
 
+/**
+ * Happens at the end of the simulation
+ */
+function reset() {
+    clearInterval(tick);
+    running = false;
+    document.getElementById("initialInfectionRate").disabled = false;
+    document.getElementById("min").disabled = false;
+    document.getElementById("max").disabled = false;
+    document.getElementById("numDays").disabled = false;
+    document.getElementById("nextDay").disabled = false;
+    cur_days = 0;
+    //distribute infections based on initial infection rate
+    neighborhood_infections = Array(num_neighborhoods).fill(0);
+    cur_infectionable = Object.assign({},neighborhood_infections);
+    distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
+}
 </script>
 </body>
 </html>
