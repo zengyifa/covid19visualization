@@ -70,8 +70,6 @@ document.getElementById("population").oninput = function () {
 
 document.getElementById("population").onmouseup = function() {
     updateMinCeilingMaxFloor();
-    neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
-    updateRects();
     distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
     updatePoints();
 }
@@ -83,6 +81,14 @@ function updateMinCeilingMaxFloor() {
     document.getElementById("maxFloor").innerHTML = maxFloor;
     document.getElementById("min").max = minCeiling;
     document.getElementById("max").min = maxFloor;
+    document.getElementById("min").value = document.getElementById("min").min;
+    document.getElementById("max").value = document.getElementById("max").max;
+    var event = new Event('mouseup', {
+        bubbles: true,
+        cancelable: true,
+    });
+    document.getElementById("min").dispatchEvent(event);
+    document.getElementById("max").dispatchEvent(event);
 }
 
 document.getElementById("minValue").innerHTML = document.getElementById("min").value ;
@@ -144,7 +150,7 @@ let cur_infectionable = Object.assign({},neighborhood_infections);
 distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
 
 var cur_days = 0;
-let num_days = 0;
+let num_days = document.getElementById("numDays").value;
 
 
 document.getElementById("numDays").oninput = function () {
