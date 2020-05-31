@@ -443,7 +443,8 @@ function getUpdatedNeighborhoodInfections(index) {
    console.log(adjIndices);
    var updated_infections = Math.floor(infection_rate * neighborhood_infections[index]);
    for (const adj of adjIndices) {
-      updated_infections = updated_infections +  Math.floor(infection_rate * neighborhood_infections[adj]);
+       var percentage_adjacent = infection_rate - 1;
+       updated_infections = updated_infections +  Math.floor(percentage_adjacent * neighborhood_infections[adj]);
    }
    console.log("updated infections is " + updated_infections);
    return updated_infections;
