@@ -1,6 +1,8 @@
 
 let num_neighborhoods = 400;
 
+let rows_cols = Math.sqrt(num_neighborhoods);
+
 let population_to_grayscale_color =
     [{"min":0, "max":100, "color":"transparent"},
      {"min":101, "max":200, "color":"#DCDCDC"},

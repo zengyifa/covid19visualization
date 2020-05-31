@@ -59,7 +59,6 @@
 
 <script>
 
-let rows_cols = Math.sqrt(num_neighborhoods);
 let population = parseInt(document.getElementById("population").value);
 updateMinCeilingMaxFloor();
 document.getElementById("population").oninput = function () {
@@ -387,10 +386,7 @@ document.getElementById("speed").oninput = function() {
 }
 function nextDay() {
     if (cur_infections < population) {
-        let num_new_infections = Math.min(population - cur_infections, Math.floor(infection_rate * cur_infections - cur_infections));
-        cur_infections = cur_infections + num_new_infections;
-        console.log("cur infections is currently " + cur_infections);
-        distribute_infections(num_new_infections);
+        updateInfections();
         updatePoints();
         cur_days += 1;
         document.getElementById("curDay").innerHTML = cur_days;
@@ -430,15 +426,43 @@ function update() {
         reset();
         return;
     }
-    let num_new_infections = Math.min(population - cur_infections, Math.floor(infection_rate * cur_infections - cur_infections));
-
-    cur_infections = cur_infections + num_new_infections;
-    console.log("cur infections is currently " + cur_infections);
-    distribute_infections(num_new_infections);
+    updateInfections();
     updatePoints();
     cur_days += 1;
     updateDisplayVariables();
 }
+/**
+ * increases a neighborhood's infections based on adjacent infections and current neighborhood infections
+ * @param index the index of the neighborhood in a one dimensional array
+ * */
+function getUpdatedNeighborhoodInfections(index) {
+   let row = getRow(index, rows_cols);
+   let col = getCol(index, rows_cols);
+   let adjIndices = getAdjacentsIndices(row, col, rows_cols);
+   console.log("adjacent indices are " );
+   console.log(adjIndices);
+   var updated_infections = Math.floor(infection_rate * neighborhood_infections[index]);
+   for (const adj of adjIndices) {
+      updated_infections = updated_infections +  Math.floor(infection_rate * neighborhood_infections[adj]);
+   }
+   console.log("updated infections is " + updated_infections);
+   return updated_infections;
+}
+/**
+ *  Updates infections for the entire grid. Updates state variables as needed
+ **/
+function updateInfections() {
+    for (let i = 0; i < neighborhood_infections.length; i++) {
+        if (neighborhood_infections[i] < neighborhood_populations[i]) {
+            let updated_num_infections = Math.min(neighborhood_populations[i], getUpdatedNeighborhoodInfections(i));
+            console.log("current infections before add was " + cur_infections);
+            cur_infections = cur_infections + (updated_num_infections - neighborhood_infections[i]);
+            console.log("current infections is " + cur_infections);
+            neighborhood_infections[i] = updated_num_infections;
+        }
+    }
+}
+
 function updateDisplayVariables() {
     document.getElementById("curDay").innerHTML = cur_days;
     document.getElementById("numInfected").innerHTML = cur_infections;
