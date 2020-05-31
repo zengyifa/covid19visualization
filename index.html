@@ -378,6 +378,9 @@ function nextDay() {
         document.getElementById("curDay").innerHTML = cur_days;
         document.getElementById("numInfected").innerHTML = cur_infections;
     }
+    if (cur_infections >= population) {
+        document.getElementById("nextDay").disabled = true;
+    }
 }
 
 var reachedEnd = false;
@@ -398,6 +401,7 @@ function runSimulation() {
             updatePoints();
             enableControls();
             updateDisplayVariables();
+            updateNumDaysUI();
             document.getElementById("startButton").innerHTML = "Start Simulation";
         }
     }
