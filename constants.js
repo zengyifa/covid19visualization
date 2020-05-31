@@ -1,4 +1,3 @@
-let population = 100000;
 
 let num_neighborhoods = 400;
 

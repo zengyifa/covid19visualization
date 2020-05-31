@@ -20,7 +20,7 @@
             <div class="vis"></div>
             <div class="display_variables">
                 <div>Total population:
-                    <span id="population"> 100000 </span>
+                    <span id="populationDisplayed"> 100000 </span>
                 </div>
                 <div>
                     Day Number: <span id="curDay">0</span>
@@ -38,21 +38,21 @@
             Simulation Infection Rate <b>(<span id="infectionRateValue">10%</span>)</b>:
             0% <input id="rate" class="slider" type="range"  min="0" max="25" value = 10> 25%
             <br/>
-            Minimum Neighborhood Population <b>(<span id="minValue">55 people</span>)</b>:
-            10 <input id="min" class="slider" type="range" min="10" max="100" value=55> 100
+            Minimum Neighborhood Population <b>(<span id="minValue">10</span> people) </b>:
+            10 <input id="min" class="slider" type="range" min="10" value="10"> <span id="minCeiling"></span>
             &emsp;
-            Maximum Neighborhood Population <b>(<span id="maxValue">2750 people</span>)</b>:
-            500 <input id="max" type="range" min="500" max="5000" value="2750" class="slider"> 5000
+            Maximum Neighborhood Population <b>(<span id="maxValue">5000</span> people) </b>:
+            <span id="maxFloor"></span> <input id="max" type="range" max="5000"  value="5000" class="slider"> 5000
             <br/>
             Number of Days <b>(<span id="numDaysValue"></span>)</b>:
             1 <input id="numDays" class="slider" type="range" > <span id="maxDays"></span>
             &emsp;
             Simulation Speed <b>(<span id="speedValue">10 </span> days per second)</b> :
             1 <input id="speed" class="slider" type="range" min="1" max="10" value="10"> 10
+            <br />
+            Population <b>(<span id="populationValue">100000</span> people)</b> :
+            4000 <input id="population" step="100" class="slider" type="range" min="4000" max="400000" value="100000"> 400000
         </div>
-
-
-
     </body>
 </head>
 <body>
@@ -60,19 +60,44 @@
 <script>
 
 let rows_cols = Math.sqrt(num_neighborhoods);
-document.getElementById("minValue").innerHTML = document.getElementById("min").value + " people";
-document.getElementById("maxValue").innerHTML = document.getElementById("max").value + " people";
+let population = parseInt(document.getElementById("population").value);
+updateMinCeilingMaxFloor();
+document.getElementById("population").oninput = function () {
+    document.getElementById("populationValue").innerHTML = this.value;
+    document.getElementById("populationDisplayed").innerHTML= this.value;
+    population = this.value;
+}
+
+document.getElementById("population").onmouseup = function() {
+    updateMinCeilingMaxFloor();
+    neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
+    updateRects();
+    distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
+    updatePoints();
+}
+
+function updateMinCeilingMaxFloor() {
+    let minCeiling = Math.floor(document.getElementById("population").value / num_neighborhoods);
+    let maxFloor = Math.ceil(document.getElementById("population").value / num_neighborhoods);
+    document.getElementById("minCeiling").innerHTML = minCeiling;
+    document.getElementById("maxFloor").innerHTML = maxFloor;
+    document.getElementById("min").max = minCeiling;
+    document.getElementById("max").min = maxFloor;
+}
+
+document.getElementById("minValue").innerHTML = document.getElementById("min").value ;
+document.getElementById("maxValue").innerHTML = document.getElementById("max").value ;
 
 //assuming num_neighborhoods is a perfect square
 let neighborhood_min = parseInt(document.getElementById("min").value);
 let neighborhood_max = parseInt(document.getElementById("max").value);
 let neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
 document.getElementById("min").oninput = function() {
-    document.getElementById("minValue").innerHTML = this.value + " people";
+    document.getElementById("minValue").innerHTML = this.value;
 }
 
 document.getElementById("min").onmouseup = function() {
-    document.getElementById("minValue").innerHTML = this.value + " people";
+    document.getElementById("minValue").innerHTML = this.value;
     neighborhood_min = parseInt(this.value);
     neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
     updateRects();
@@ -80,7 +105,7 @@ document.getElementById("min").onmouseup = function() {
     updatePoints();
 }
 document.getElementById("min").ontouchend = function() {
-    document.getElementById("minValue").innerHTML = this.value + " people";
+    document.getElementById("minValue").innerHTML = this.value;
     neighborhood_min = parseInt(this.value);
     neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
     updateRects();
@@ -89,11 +114,11 @@ document.getElementById("min").ontouchend = function() {
 }
 
 document.getElementById("max").oninput = function() {
-    document.getElementById("maxValue").innerHTML = this.value + " people";
+    document.getElementById("maxValue").innerHTML = this.value ;
 }
 
 document.getElementById("max").onmouseup = function() {
-    document.getElementById("maxValue").innerHTML = this.value + " people";
+    document.getElementById("maxValue").innerHTML = this.value ;
     neighborhood_max = parseInt(this.value);
     neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
     updateRects();
@@ -102,7 +127,7 @@ document.getElementById("max").onmouseup = function() {
 }
 
 document.getElementById("max").ontouchend = function() {
-    document.getElementById("maxValue").innerHTML = this.value + " people";
+    document.getElementById("maxValue").innerHTML = this.value ;
     neighborhood_max = parseInt(this.value);
     neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
     updateRects();
@@ -117,7 +142,6 @@ var cur_infections = 0;
 let neighborhood_infections = Array(num_neighborhoods).fill(0);
 let cur_infectionable = Object.assign({},neighborhood_infections);
 distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
-document.getElementById("numInfected").innerHTML = cur_infections;
 
 var cur_days = 0;
 let num_days = 0;
@@ -207,6 +231,7 @@ function distributeInitialInfections(infection_rate) {
     neighborhood_infections = Array(num_neighborhoods).fill(0);
     cur_infectionable = Object.assign({},neighborhood_infections);
     cur_infections = Math.floor(infection_rate * population);
+    document.getElementById("numInfected").innerHTML = cur_infections;
     distribute_infections(cur_infections);
 }
 /**
