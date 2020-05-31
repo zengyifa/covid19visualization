@@ -47,7 +47,7 @@
             Number of Days <b>(<span id="numDaysValue"></span>)</b>:
             1 <input id="numDays" class="slider" type="range" > <span id="maxDays"></span>
             &emsp;
-            Simulation Speed <b>(<span id="speedValue">10 days per second</span>)</b> :
+            Simulation Speed <b>(<span id="speedValue">10 </span> days per second)</b> :
             1 <input id="speed" class="slider" type="range" min="1" max="10" value="10"> 10
         </div>
 
@@ -346,14 +346,22 @@ function distribute_infections(num_infections){
     }
 }
 
-let simulation_speed = 1000 / parseInt(document.getElementById("speed").value);
+/**
+ * Takes in simulation speed in days per second and converts to milliseconds per day.
+ **/
+function getSimulationSpeed(days_per_second) {
+    return 1000 / days_per_second;
+}
+
+let simulation_speed = getSimulationSpeed(parseInt(document.getElementById("speed").value));
+console.log("simulation speed is " + simulation_speed);
 
 var tick = 0;
 var running = false;
 
 document.getElementById("speed").oninput = function() {
-    document.getElementById("speedValue").innerHTML = this.value +"%";
-    simulation_speed = Math.floor(1 / (document.getElementById("speed").value / 100) * 100);
+    document.getElementById("speedValue").innerHTML = this.value;
+    simulation_speed = getSimulationSpeed(parseInt(document.getElementById("speed").value));
     if (running === true) {
         clearInterval(tick);
         tick = setInterval(update, simulation_speed);
