@@ -44,8 +44,8 @@
             Maximum Neighborhood Population <b>(<span id="maxValue">5000</span> people) </b>:
             <span id="maxFloor"></span> <input id="max" type="range" max="5000"  value="5000" class="slider"> 5000
             <br/>
-            Number of Days <b>(<span id="numDaysValue"></span>)</b>:
-            1 <input id="numDays" class="slider" type="range" > <span id="maxDays"></span>
+            Number of Days <b>(<span id="numDaysValue">50</span> days)</b>:
+            1 <input id="numDays" class="slider" min="1" max="100" type="range" value="50"> 100
             &emsp;
             Simulation Speed <b>(<span id="speedValue">10 </span> days per second)</b> :
             1 <input id="speed" class="slider" type="range" min="1" max="10" value="10"> 10
@@ -145,11 +145,10 @@ distributeInitialInfections((document.getElementById("initialInfectionRate").val
 
 var cur_days = 0;
 let num_days = 0;
-updateNumDaysUI();
 
 
 document.getElementById("numDays").oninput = function () {
-    document.getElementById("numDaysValue").innerHTML = this.value  + " days";
+    document.getElementById("numDaysValue").innerHTML = this.value;
     num_days = parseInt(this.value);
 }
 
@@ -196,9 +195,6 @@ document.getElementById("rate").oninput = function() {
 
 document.getElementById("rate").onmouseup = function() {
     infection_rate =  1 + (document.getElementById("rate").value / 100);
-    if (document.getElementById("numDays").disabled === false) {
-        updateNumDaysUI();
-    }
 }
 
 document.getElementById("initialInfectionRate").oninput = function() {
@@ -208,22 +204,13 @@ document.getElementById("initialInfectionRate").oninput = function() {
 
 document.getElementById("initialInfectionRate").onmouseup = function() {
     distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
-    updateNumDaysUI();
     updatePoints();
 }
 document.getElementById("initialInfectionRate").ontouchend = function() {
     distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
-    updateNumDaysUI();
     updatePoints();
 }
 
-function updateNumDaysUI() {
-    document.getElementById("numDays").max = Math.ceil(getBaseLog(infection_rate, population / cur_infections));
-    document.getElementById("maxDays").innerHTML = document.getElementById("numDays").max;
-    document.getElementById("numDays").value = document.getElementById("numDays").max;
-    num_days = document.getElementById("numDays").value;
-    document.getElementById("numDaysValue").innerHTML = num_days + " days";
-}
 /**
  * calculates and distributes infections to clean neighborhoods
  **/
@@ -426,7 +413,6 @@ function runSimulation() {
             updatePoints();
             enableControls();
             updateDisplayVariables();
-            updateNumDaysUI();
             document.getElementById("startButton").innerHTML = "Start Simulation";
         }
     }
@@ -470,6 +456,7 @@ function enableControls() {
     document.getElementById("max").disabled = false;
     document.getElementById("numDays").disabled = false;
     document.getElementById("nextDay").disabled = false;
+    document.getElementById("population").disabled = false;
 }
 
 /**
@@ -482,6 +469,7 @@ function disableControls() {
     document.getElementById("max").disabled = true;
     document.getElementById("numDays").disabled = true;
     document.getElementById("nextDay").disabled = true;
+    document.getElementById("population").disabled = true;
 }
 </script>
 </body>
