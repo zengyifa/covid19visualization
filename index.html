@@ -16,8 +16,11 @@
                 Initial infection rate <b>(<span id="initialInfectionRateValue">5%</span>)</b>:
                 0% <input id="initialInfectionRate" class="slider" type="range" min="0" max="10" step="0.1" value="5"> 10%
                 <br />
-                Simulation Infection Rate <b>(<span id="infectionRateValue">10%</span>)</b>:
-                0% <input id="rate" class="slider" type="range"  min="0" max="25" value = 10> 25%
+                Current Cell Infection Rate <b>(<span id="curCellRateValue">10%</span>)</b>:
+                0% <input id="curCellRate" class="slider" type="range"  min="0" max="25" value = 10> 25%
+                <br/>
+                Adjacent Cell Infection Rate <b>(<span id="adjCellRateValue">10%</span>)</b>:
+                0% <input id="adjCellRate" class="slider" type="range"  min="0" max="25" value = 10> 25%
                 <br/>
                 Min Neighborhood Pop <b>(<span id="minValue">10</span> people) </b>:
                 10 <input id="min" class="slider" type="range" min="10" value="10"> <span id="minCeiling"></span>
@@ -28,8 +31,8 @@
                 Number of Days <b>(<span id="numDaysValue">50</span> days)</b>:
                 1 <input id="numDays" class="slider" min="1" max="100" type="range" value="50"> 100
                 <br />
-                Simulation Speed <b>(<span id="speedValue">10 </span> sec/day)</b> :
-                1 <input id="speed" class="slider" type="range" min="1" max="10" value="10"> 10
+                Simulation Speed <b>(<span id="speedValue">1</span> secs/day)</b> :
+                1 <input id="speed" class="slider" type="range" step = 0.1 min="0.1" max="10" value="1"> 10
                 <br />
                 Population <b>(<span id="populationValue">100000</span> people)</b> :
                 4000 <input id="population" step="100" class="slider" type="range" min="4000" max="400000" value="100000"> 400000
@@ -140,7 +143,8 @@ document.getElementById("max").ontouchend = function() {
     updatePoints();
 }
 
-let infection_rate = 1 + (document.getElementById("rate").value / 100);
+let cur_cell_rate = 1 + (document.getElementById("curCellRate").value / 100);
+let adj_cell_rate = 1 + (document.getElementById("adjCellRate").value / 100);
 
 var cur_infections = 0;
 //represents the number of infections in each neighborhood
@@ -180,14 +184,16 @@ for (let i = 0; i < neighborhood_infections.length; i++) {
     addNeighborhood(neighborhood_populations[i],radius);
 }
 
-document.getElementById("rate").oninput = function() {
-    document.getElementById("infectionRateValue").innerHTML = this.value + "%";
-    infection_rate =  1 + (document.getElementById("rate").value / 100);
+document.getElementById("curCellRate").oninput = function() {
+    document.getElementById("curCellRateValue").innerHTML = this.value + "%";
+    cur_cell_rate =  1 + (document.getElementById("curCellRate").value / 100);
 }
 
-document.getElementById("rate").onmouseup = function() {
-    infection_rate =  1 + (document.getElementById("rate").value / 100);
+document.getElementById("adjCellRate").oninput = function() {
+    document.getElementById("adjCellRateValue").innerHTML = this.value + "%";
+    cur_cell_rate =  1 + (document.getElementById("adjCellRate").value / 100);
 }
+
 
 document.getElementById("initialInfectionRate").oninput = function() {
     document.getElementById("initialInfectionRateValue").innerHTML = this.value + "%";
@@ -363,19 +369,18 @@ function distribute_infections(num_infections){
 /**
  * Takes in simulation speed in days per second and converts to milliseconds per day.
  **/
-function getSimulationSpeed(days_per_second) {
-    return 1000 / days_per_second;
+function getSimulationSpeed(secs_per_day) {
+    return 1000 * secs_per_day;
 }
 
-let simulation_speed = getSimulationSpeed(parseInt(document.getElementById("speed").value));
-console.log("simulation speed is " + simulation_speed);
+let simulation_speed = getSimulationSpeed(document.getElementById("speed").value);
 
 var tick = 0;
 var running = false;
 
 document.getElementById("speed").oninput = function() {
     document.getElementById("speedValue").innerHTML = this.value;
-    simulation_speed = getSimulationSpeed(parseInt(document.getElementById("speed").value));
+    simulation_speed = getSimulationSpeed(document.getElementById("speed").value);
     if (running === true) {
         clearInterval(tick);
         tick = setInterval(update, simulation_speed);
@@ -436,14 +441,12 @@ function getUpdatedNeighborhoodInfections(index) {
    let row = getRow(index, rows_cols);
    let col = getCol(index, rows_cols);
    let adjIndices = getAdjacentsIndices(row, col, rows_cols);
-   console.log("adjacent indices are " );
    console.log(adjIndices);
-   var updated_infections = Math.floor(infection_rate * neighborhood_infections[index]);
+   var updated_infections = Math.floor(cur_cell_rate * neighborhood_infections[index]);
    for (const adj of adjIndices) {
-       var percentage_adjacent = infection_rate - 1;
+       var percentage_adjacent = adj_cell_rate - 1;
        updated_infections = updated_infections +  Math.floor(percentage_adjacent * neighborhood_infections[adj]);
    }
-   console.log("updated infections is " + updated_infections);
    return updated_infections;
 }
 /**
