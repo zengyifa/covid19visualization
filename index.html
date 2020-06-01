@@ -19,16 +19,16 @@
                 Simulation Infection Rate <b>(<span id="infectionRateValue">10%</span>)</b>:
                 0% <input id="rate" class="slider" type="range"  min="0" max="25" value = 10> 25%
                 <br/>
-                Min Neighborhood Population <b>(<span id="minValue">10</span> people) </b>:
+                Min Neighborhood Pop <b>(<span id="minValue">10</span> people) </b>:
                 10 <input id="min" class="slider" type="range" min="10" value="10"> <span id="minCeiling"></span>
                 <br />
-                Max Neighborhood Population <b>(<span id="maxValue">5000</span> people) </b>:
+                Max Neighborhood Pop <b>(<span id="maxValue">5000</span> people) </b>:
                 <span id="maxFloor"></span> <input id="max" type="range" max="5000"  value="5000" class="slider"> 5000
                 <br/>
                 Number of Days <b>(<span id="numDaysValue">50</span> days)</b>:
                 1 <input id="numDays" class="slider" min="1" max="100" type="range" value="50"> 100
                 <br />
-                Simulation Speed <b>(<span id="speedValue">10 </span> days per second)</b> :
+                Simulation Speed <b>(<span id="speedValue">10 </span> sec/day)</b> :
                 1 <input id="speed" class="slider" type="range" min="1" max="10" value="10"> 10
                 <br />
                 Population <b>(<span id="populationValue">100000</span> people)</b> :
@@ -39,24 +39,19 @@
                     <br/>
                     <button id="nextDay" class="myButton" onclick="nextDay()">Next Day </button>
                 </div>
-
+                <div class="display_variables">
+                    <div>Total population:
+                        <span id="populationDisplayed"> 100000 </span>
+                    </div>
+                    <div>
+                        Day Number: <span id="curDay">0</span>
+                    </div>
+                    <div>
+                        Number Infected: <span id="numInfected">0</span>
+                    </div>
+                </div>
             </div>
             <div class="vis"></div>
-            <div class="display_variables">
-                <div>Total population:
-                    <span id="populationDisplayed"> 100000 </span>
-                </div>
-                <div>
-                    Day Number: <span id="curDay">0</span>
-                </div>
-                <div>
-                    Number Infected: <span id="numInfected">0</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="parameters">
-
         </div>
     </body>
 </head>

@@ -6,18 +6,15 @@
     float:left;
     width:30%;
     padding-top:10%;
-    font-size:150%;
+    font-size:large;
 }
 .vis{
     float:left;
-    width:50%;
 }
 
 .display_variables {
-    font-size:150%;
+    font-size:large;
     padding-top:10%;
-    width:20%;
-    float:left;
 }
 
 
