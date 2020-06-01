@@ -12,10 +12,34 @@
     <title>Covid19 Visualization</title>
     <body>
         <div class="container">
-            <div class="controls">
-                <button id="startButton" class="myButton" onclick="runSimulation()">Start Simulation</button>
+            <div class="parameters">
+                Initial infection rate <b>(<span id="initialInfectionRateValue">5%</span>)</b>:
+                0% <input id="initialInfectionRate" class="slider" type="range" min="0" max="10" step="0.1" value="5"> 10%
+                <br />
+                Simulation Infection Rate <b>(<span id="infectionRateValue">10%</span>)</b>:
+                0% <input id="rate" class="slider" type="range"  min="0" max="25" value = 10> 25%
                 <br/>
-                <button id="nextDay" class="myButton" onclick="nextDay()">Next Day </button>
+                Min Neighborhood Population <b>(<span id="minValue">10</span> people) </b>:
+                10 <input id="min" class="slider" type="range" min="10" value="10"> <span id="minCeiling"></span>
+                <br />
+                Max Neighborhood Population <b>(<span id="maxValue">5000</span> people) </b>:
+                <span id="maxFloor"></span> <input id="max" type="range" max="5000"  value="5000" class="slider"> 5000
+                <br/>
+                Number of Days <b>(<span id="numDaysValue">50</span> days)</b>:
+                1 <input id="numDays" class="slider" min="1" max="100" type="range" value="50"> 100
+                <br />
+                Simulation Speed <b>(<span id="speedValue">10 </span> days per second)</b> :
+                1 <input id="speed" class="slider" type="range" min="1" max="10" value="10"> 10
+                <br />
+                Population <b>(<span id="populationValue">100000</span> people)</b> :
+                4000 <input id="population" step="100" class="slider" type="range" min="4000" max="400000" value="100000"> 400000
+                <br />
+                <div class="controls">
+                    <button id="startButton" class="myButton" onclick="runSimulation()">Start Simulation</button>
+                    <br/>
+                    <button id="nextDay" class="myButton" onclick="nextDay()">Next Day </button>
+                </div>
+
             </div>
             <div class="vis"></div>
             <div class="display_variables">
@@ -32,26 +56,7 @@
         </div>
 
         <div class="parameters">
-            Initial infection rate <b>(<span id="initialInfectionRateValue">5%</span>)</b>:
-            0% <input id="initialInfectionRate" class="slider" type="range" min="0" max="10" step="0.1" value="5"> 10%
-            &emsp;
-            Simulation Infection Rate <b>(<span id="infectionRateValue">10%</span>)</b>:
-            0% <input id="rate" class="slider" type="range"  min="0" max="25" value = 10> 25%
-            <br/>
-            Minimum Neighborhood Population <b>(<span id="minValue">10</span> people) </b>:
-            10 <input id="min" class="slider" type="range" min="10" value="10"> <span id="minCeiling"></span>
-            &emsp;
-            Maximum Neighborhood Population <b>(<span id="maxValue">5000</span> people) </b>:
-            <span id="maxFloor"></span> <input id="max" type="range" max="5000"  value="5000" class="slider"> 5000
-            <br/>
-            Number of Days <b>(<span id="numDaysValue">50</span> days)</b>:
-            1 <input id="numDays" class="slider" min="1" max="100" type="range" value="50"> 100
-            &emsp;
-            Simulation Speed <b>(<span id="speedValue">10 </span> days per second)</b> :
-            1 <input id="speed" class="slider" type="range" min="1" max="10" value="10"> 10
-            <br />
-            Population <b>(<span id="populationValue">100000</span> people)</b> :
-            4000 <input id="population" step="100" class="slider" type="range" min="4000" max="400000" value="100000"> 400000
+
         </div>
     </body>
 </head>
@@ -157,21 +162,8 @@ document.getElementById("numDays").oninput = function () {
     num_days = parseInt(this.value);
 }
 
-let max_radius = 25;
-//dimensions of the grid, assumed to be a square.
-let gridSize = max_radius * rows_cols * 2;
-//svg dimensions
- let width = gridSize * 1.15,
-     height = gridSize * 1.15;
-
-// var points = [];
 var rects = [];
-//grid dimensions
-// let pointGrid = d3.layout.grid()
-//     .points()
-//     .size([gridSize, gridSize])
-//     .rows([rows_cols])
-//     .cols([rows_cols])
+
 
 var rectGrid = d3.layout.grid()
     .bands()
@@ -188,8 +180,8 @@ var svg = d3.select(".vis").append("svg")
     .attr("transform", "translate(70,70)");
 
 
-for (var i = 0; i < neighborhood_infections.length; i++) {
-    let radius = neighborhood_infections[i] / neighborhood_populations[i] * max_radius;
+for (let i = 0; i < neighborhood_infections.length; i++) {
+    let radius = getRadiusFromInfected(neighborhood_infections[i]);
     addNeighborhood(neighborhood_populations[i],radius);
 }
 
@@ -229,10 +221,18 @@ function distributeInitialInfections(infection_rate) {
 /**
  * Gets the corresponding grayscale color for a neighborhood population
  **/
-function get_color_for_population(population) {
+function getColorForPopulation(population) {
     for (const scale of population_to_grayscale_color) {
         if (population >= scale["min"] && population <= scale["max"]) {
             return scale["color"];
+        }
+    }
+}
+
+function getRadiusFromInfected(num_infected) {
+    for (const scale of infections_to_radius) {
+        if (num_infected >= scale["min"] && num_infected <= scale["max"]) {
+            return scale["radius"];
         }
     }
 }
@@ -247,9 +247,9 @@ function addNeighborhood(population, radius) {
         .attr("width", max_radius * 2)
         .attr("height", max_radius * 2)
         .attr("class", "rect")
-        .attr("fill", get_color_for_population(population))
+        .attr("fill", getColorForPopulation(population))
         .attr("stroke", "black")
-        .attr("stroke-opacity","0.1")
+        .attr("stroke-opacity","0.5")
         .attr("transform", function (d) {
             return "translate(" + d.x + "," + d.y + ")";
         });
@@ -266,10 +266,12 @@ function updateRects() {
     var rect = svg.selectAll(".rect")
         .data(rectGrid(rects));
     rect.each(function (d, i) {
-        var new_color = get_color_for_population(neighborhood_populations[i])
+        var new_color = getColorForPopulation(neighborhood_populations[i])
         d3.select(this).transition().attr("fill", new_color);
     })
 }
+
+
 /**
  * updates points according to infection densities
  **/
@@ -277,7 +279,7 @@ function updatePoints() {
     var point = svg.selectAll(".point")
         .data(rectGrid(rects));
     point.each(function (d, i) {
-        var new_radius = Math.min(max_radius, (neighborhood_infections[i] / neighborhood_populations[i]) * max_radius);
+        let new_radius = getRadiusFromInfected(neighborhood_infections[i]);
         d3.select(this).transition().attr("r", new_radius);
     })
 }
@@ -406,7 +408,7 @@ function runSimulation() {
             disableControls();
             tick = setInterval(update, simulation_speed);
         } else {
-            //this is if user clicked the button when it said "new simulation"
+            //this is if user clicked the button at the endstate of a simulation
             reachedEnd = false;
             cur_days = 0;
             neighborhood_infections = Array(num_neighborhoods).fill(0);
@@ -415,7 +417,7 @@ function runSimulation() {
             updatePoints();
             enableControls();
             updateDisplayVariables();
-            document.getElementById("startButton").innerHTML = "Start Simulation";
+            document.getElementById("startButton").innerHTML = start_simulation_button_text;
         }
     }
 }
@@ -475,7 +477,7 @@ function reset() {
     clearInterval(tick);
     reachedEnd = true;
     running = false;
-    document.getElementById("startButton").innerHTML="New Simulation";
+    document.getElementById("startButton").innerHTML= new_simulation_button_text;
     document.getElementById("startButton").disabled = false;
     if (cur_infections < population) {
         document.getElementById("nextDay").disabled = false;
