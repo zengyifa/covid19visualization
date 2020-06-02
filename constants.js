@@ -40,3 +40,5 @@ let infections_to_radius = [
 let new_simulation_button_text = "Go to new initial state";
 
 let start_simulation_button_text = "Run Simulation";
+
+let parkland_cell_color = "#7CFC00";

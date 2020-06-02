@@ -282,7 +282,7 @@ function addNeighborhood(population, radius, parkland) {
         .attr("width", max_radius * 2)
         .attr("height", max_radius * 2)
         .attr("class", "rect")
-        .attr("fill", parkland ? "green" : getColorForPopulation(population))
+        .attr("fill", parkland ? parkland_cell_color : getColorForPopulation(population))
         .attr("stroke", "black")
         .attr("stroke-opacity","0.5")
         .attr("transform", function (d) {
@@ -301,7 +301,7 @@ function updateRects() {
     var rect = svg.selectAll(".rect")
         .data(rectGrid(rects));
     rect.each(function (d, i) {
-        var new_color = parklands[i] ? "green" : getColorForPopulation(neighborhood_populations[i])
+        var new_color = parklands[i] ? parkland_cell_color : getColorForPopulation(neighborhood_populations[i])
         d3.select(this).transition().attr("fill", new_color);
     })
 }
