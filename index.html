@@ -29,7 +29,7 @@
                 <span id="maxFloor"></span> <input id="max" type="range" max="5000"  value="5000" class="slider"> 5000
                 <br/>
                 Parkland Neighborhoods <b>(<span id="parklandValue">0</span>%)</b>:
-                0 <input id="parkland" type="range" min="0" max="25" value="0" class="slider"> 25
+                0% <input id="parkland" type="range" min="0" max="25" value="0" class="slider"> 25%
                 <br />
                 Number of Days <b>(<span id="numDaysValue">50</span> days)</b>:
                 1 <input id="numDays" class="slider" min="1" max="100" type="range" value="50"> 100
@@ -67,13 +67,17 @@
 
 let population = parseInt(document.getElementById("population").value);
 let parkland_percent = document.getElementById("parkland").value / 100;
+let parklands = generateParklandsArray();
+let num_parklands = parklands.filter(Boolean).length;
 document.getElementById("parkland").oninput = function (){
     document.getElementById("parklandValue").innerHTML = this.value;
-    parkland_percent = this.value / 100;
 }
 
 document.getElementById("parkland").onmouseup = function (){
+    parkland_percent = this.value / 100;
     parklands = generateParklandsArray();
+    num_parklands = parklands.filter(Boolean).length;
+    updateMinCeilingMaxFloor();
     neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
     updateRects();
     distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
@@ -94,8 +98,8 @@ document.getElementById("population").onmouseup = function() {
 }
 
 function updateMinCeilingMaxFloor() {
-    let minCeiling = Math.floor(document.getElementById("population").value / num_neighborhoods);
-    let maxFloor = Math.ceil(document.getElementById("population").value / num_neighborhoods);
+    let minCeiling = Math.floor(document.getElementById("population").value / (num_neighborhoods - num_parklands));
+    let maxFloor = Math.ceil(document.getElementById("population").value / (num_neighborhoods - num_parklands));
     document.getElementById("minCeiling").innerHTML = minCeiling;
     document.getElementById("maxFloor").innerHTML = maxFloor;
     document.getElementById("min").max = minCeiling;
@@ -116,7 +120,6 @@ document.getElementById("maxValue").innerHTML = document.getElementById("max").v
 //assuming num_neighborhoods is a perfect square
 let neighborhood_min = parseInt(document.getElementById("min").value);
 let neighborhood_max = parseInt(document.getElementById("max").value);
-let parklands = generateParklandsArray();
 
 /**
  * returns a boolean array where true represents a parkland neighborhood.
@@ -323,17 +326,20 @@ function updatePoints() {
  * Distributes population to neighborhoods
  */
 function distribute_population(min, max) {
-    if (min * num_neighborhoods > population) {
+    let numNonParkNeighborhoods = num_neighborhoods - num_parklands;
+    if (min * numNonParkNeighborhoods > population) {
         throw new Error("minimum neighborhood population too high");
-    } else if (max * num_neighborhoods < population) {
+    } else if (max * numNonParkNeighborhoods  < population) {
         throw new Error("maximum neighborhood population too low");
     } else if (min > max) {
         throw new Error("min neighborhood population can't be greater than max");
     }
+    //neighborhoods includes parkland neighborhoods
     var neighborhoods = Array(num_neighborhoods).fill(min);
-    var pop_to_be_filled = population - num_neighborhoods * min;
-    //represents non-full neighborhoods
+    var pop_to_be_filled = population - numNonParkNeighborhoods * min;
+
     neighborhoods = distribute_add(neighborhoods, pop_to_be_filled);
+    //represents non-full neighborhoods
     var cur_populable = Object.assign({}, neighborhoods);
     // enforce max, check for leftovers.
     var leftover = 0;
@@ -420,19 +426,22 @@ document.getElementById("speed").oninput = function() {
         tick = setInterval(update, simulation_speed);
     }
 }
+/**
+ * When next day button is clicked
+ **/
 function nextDay() {
     if (cur_infections < population) {
         updateInfections();
         updatePoints();
         cur_days += 1;
-        document.getElementById("curDay").innerHTML = cur_days;
-        document.getElementById("numInfected").innerHTML = cur_infections;
+        updateDisplayVariables();
     }
     if (cur_infections >= population) {
         document.getElementById("nextDay").disabled = true;
     }
 }
 
+//keeps track of whether simulation reached end state.
 var reachedEnd = false;
 
 function runSimulation() {
@@ -520,6 +529,7 @@ function enableControls() {
     document.getElementById("numDays").disabled = false;
     document.getElementById("nextDay").disabled = false;
     document.getElementById("population").disabled = false;
+    document.getElementById("parkland").disabled = false;
 }
 
 /**
@@ -533,6 +543,7 @@ function disableControls() {
     document.getElementById("numDays").disabled = true;
     document.getElementById("nextDay").disabled = true;
     document.getElementById("population").disabled = true;
+    document.getElementById("parkland").disabled = true;
 }
 </script>
 </body>
