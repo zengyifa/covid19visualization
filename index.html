@@ -28,6 +28,9 @@
                 Max Neighborhood Pop <b>(<span id="maxValue">5000</span> people) </b>:
                 <span id="maxFloor"></span> <input id="max" type="range" max="5000"  value="5000" class="slider"> 5000
                 <br/>
+                Parkland Neighborhoods <b>(<span id="parklandValue">0</span>%)</b>:
+                0 <input id="parkland" type="range" min="0" max="25" value="0" class="slider"> 25
+                <br />
                 Number of Days <b>(<span id="numDaysValue">50</span> days)</b>:
                 1 <input id="numDays" class="slider" min="1" max="100" type="range" value="50"> 100
                 <br />
@@ -63,6 +66,20 @@
 <script>
 
 let population = parseInt(document.getElementById("population").value);
+let parkland_percent = document.getElementById("parkland").value / 100;
+document.getElementById("parkland").oninput = function (){
+    document.getElementById("parklandValue").innerHTML = this.value;
+    parkland_percent = this.value / 100;
+}
+
+document.getElementById("parkland").onmouseup = function (){
+    parklands = generateParklandsArray();
+    neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
+    updateRects();
+    distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
+    updatePoints();
+}
+
 updateMinCeilingMaxFloor();
 document.getElementById("population").oninput = function () {
     document.getElementById("populationValue").innerHTML = this.value;
@@ -99,6 +116,23 @@ document.getElementById("maxValue").innerHTML = document.getElementById("max").v
 //assuming num_neighborhoods is a perfect square
 let neighborhood_min = parseInt(document.getElementById("min").value);
 let neighborhood_max = parseInt(document.getElementById("max").value);
+let parklands = generateParklandsArray();
+
+/**
+ * returns a boolean array where true represents a parkland neighborhood.
+ **/
+function generateParklandsArray() {
+    var result = Array(num_neighborhoods).fill(false);
+    for (let i = 0; i < Math.ceil(parkland_percent * num_neighborhoods); i++) {
+        var index = Math.floor(Math.random() * (num_neighborhoods - 1));
+        while (result[index] === true) {
+            index = Math.floor(Math.random() * (num_neighborhoods - 1));
+        }
+        result[index] = true;
+    }
+    return result;
+}
+
 let neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
 document.getElementById("min").oninput = function() {
     document.getElementById("minValue").innerHTML = this.value;
@@ -181,7 +215,7 @@ var svg = d3.select(".vis").append("svg")
 
 for (let i = 0; i < neighborhood_infections.length; i++) {
     let radius = getRadiusFromInfected(neighborhood_infections[i]);
-    addNeighborhood(neighborhood_populations[i],radius);
+    addNeighborhood(neighborhood_populations[i],radius, parklands[i]);
 }
 
 document.getElementById("curCellRate").oninput = function() {
@@ -237,7 +271,7 @@ function getRadiusFromInfected(num_infected) {
         }
     }
 }
-function addNeighborhood(population, radius) {
+function addNeighborhood(population, radius, parkland) {
     rects.push({});
     var rectangles = svg.selectAll("g")
         .data(rectGrid(rects))
@@ -248,7 +282,7 @@ function addNeighborhood(population, radius) {
         .attr("width", max_radius * 2)
         .attr("height", max_radius * 2)
         .attr("class", "rect")
-        .attr("fill", getColorForPopulation(population))
+        .attr("fill", parkland ? "green" : getColorForPopulation(population))
         .attr("stroke", "black")
         .attr("stroke-opacity","0.5")
         .attr("transform", function (d) {
@@ -267,7 +301,7 @@ function updateRects() {
     var rect = svg.selectAll(".rect")
         .data(rectGrid(rects));
     rect.each(function (d, i) {
-        var new_color = getColorForPopulation(neighborhood_populations[i])
+        var new_color = parklands[i] ? "green" : getColorForPopulation(neighborhood_populations[i])
         d3.select(this).transition().attr("fill", new_color);
     })
 }
@@ -304,7 +338,12 @@ function distribute_population(min, max) {
     // enforce max, check for leftovers.
     var leftover = 0;
     for (var i in cur_populable) {
-        if (cur_populable[i] >= max) {
+        //account for parklands first
+        if (parklands[i] === true) {
+            leftover += cur_populable[i];
+            neighborhoods[i] = 0;
+            delete cur_populable[i];
+        } else if (cur_populable[i] >= max) {
             leftover += (cur_populable[i] - max);
             neighborhoods[i] = max;
             delete cur_populable[i];
@@ -332,19 +371,15 @@ function distribute_population(min, max) {
 }
 
 /**
- * distributes num_infections into neighborhood_infections array
+ * distributes num_infections into neighborhood_infections array, based on each neighborhood's max population.
  * updates cur_infectionable to have only non-fully infected neighborhoods
  * @param num_infections
  */
 function distribute_infections(num_infections){
     cur_infectionable = distribute_add_dict(cur_infectionable, num_infections);
-    console.log("cur_infectionable at beginning is ");
-    console.log(cur_infectionable);
     var leftover = 0;
     for (var i in cur_infectionable) {
         neighborhood_infections[i] = cur_infectionable[i];
-        // console.log("cur_infectionable at " + i  + " is  " + cur_infectionable[i]);
-        // console.log("set neighborhood " + i + " to have infections " + neighborhood_infections[i]);
         if (cur_infectionable[i] >= neighborhood_populations[i]) {
             leftover += (cur_infectionable[i] - neighborhood_populations[i]);
             neighborhood_infections[i] = neighborhood_populations[i];
@@ -353,7 +388,6 @@ function distribute_infections(num_infections){
     }
     while (leftover > 0) {
         cur_infectionable = distribute_add_dict(cur_infectionable, leftover);
-
         leftover = 0;
         for (var i in cur_infectionable) {
             neighborhood_infections[i] = Number(cur_infectionable[i]);
@@ -456,9 +490,7 @@ function updateInfections() {
     for (let i = 0; i < neighborhood_infections.length; i++) {
         if (neighborhood_infections[i] < neighborhood_populations[i]) {
             let updated_num_infections = Math.min(neighborhood_populations[i], getUpdatedNeighborhoodInfections(i));
-            console.log("current infections before add was " + cur_infections);
             cur_infections = cur_infections + (updated_num_infections - neighborhood_infections[i]);
-            console.log("current infections is " + cur_infections);
             neighborhood_infections[i] = updated_num_infections;
         }
     }

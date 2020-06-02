@@ -3,7 +3,7 @@ let num_neighborhoods = 400;
 
 let rows_cols = Math.sqrt(num_neighborhoods);
 
-let max_radius = 25;
+let max_radius = 20;
 
 
 //dimensions of the grid, assumed to be a square.
