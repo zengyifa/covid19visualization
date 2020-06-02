@@ -252,6 +252,11 @@ document.getElementById("initialInfectionRate").ontouchend = function() {
 function distributeInitialInfections(infection_rate) {
     neighborhood_infections = Array(num_neighborhoods).fill(0);
     cur_infectionable = Object.assign({},neighborhood_infections);
+    for (const i in cur_infectionable) {
+        if (parklands[i] === true) {
+            delete cur_infectionable[i];
+        }
+    }
     cur_infections = Math.floor(infection_rate * population);
     document.getElementById("numInfected").innerHTML = cur_infections;
     distribute_infections(cur_infections);
@@ -336,14 +341,14 @@ function distribute_population(min, max) {
     }
     //neighborhoods includes parkland neighborhoods
     var neighborhoods = Array(num_neighborhoods).fill(min);
-    var pop_to_be_filled = population - numNonParkNeighborhoods * min;
+    var pop_to_be_filled = population - num_neighborhoods * min;
 
     neighborhoods = distribute_add(neighborhoods, pop_to_be_filled);
     //represents non-full neighborhoods
     var cur_populable = Object.assign({}, neighborhoods);
     // enforce max, check for leftovers.
     var leftover = 0;
-    for (var i in cur_populable) {
+    for (const i in cur_populable) {
         //account for parklands first
         if (parklands[i] === true) {
             leftover += cur_populable[i];
@@ -384,7 +389,7 @@ function distribute_population(min, max) {
 function distribute_infections(num_infections){
     cur_infectionable = distribute_add_dict(cur_infectionable, num_infections);
     var leftover = 0;
-    for (var i in cur_infectionable) {
+    for (const i in cur_infectionable) {
         neighborhood_infections[i] = cur_infectionable[i];
         if (cur_infectionable[i] >= neighborhood_populations[i]) {
             leftover += (cur_infectionable[i] - neighborhood_populations[i]);
@@ -395,7 +400,7 @@ function distribute_infections(num_infections){
     while (leftover > 0) {
         cur_infectionable = distribute_add_dict(cur_infectionable, leftover);
         leftover = 0;
-        for (var i in cur_infectionable) {
+        for (const i in cur_infectionable) {
             neighborhood_infections[i] = Number(cur_infectionable[i]);
             if (cur_infectionable[i] >= neighborhood_populations[i]) {
                 leftover += (cur_infectionable[i] - neighborhood_populations[i]);
@@ -484,7 +489,6 @@ function getUpdatedNeighborhoodInfections(index) {
    let row = getRow(index, rows_cols);
    let col = getCol(index, rows_cols);
    let adjIndices = getAdjacentsIndices(row, col, rows_cols);
-   console.log(adjIndices);
    var updated_infections = Math.floor(cur_cell_rate * neighborhood_infections[index]);
    for (const adj of adjIndices) {
        var percentage_adjacent = adj_cell_rate - 1;
@@ -497,7 +501,7 @@ function getUpdatedNeighborhoodInfections(index) {
  **/
 function updateInfections() {
     for (let i = 0; i < neighborhood_infections.length; i++) {
-        if (neighborhood_infections[i] < neighborhood_populations[i]) {
+        if (neighborhood_infections[i] < neighborhood_populations[i] && !parklands[i]) {
             let updated_num_infections = Math.min(neighborhood_populations[i], getUpdatedNeighborhoodInfections(i));
             cur_infections = cur_infections + (updated_num_infections - neighborhood_infections[i]);
             neighborhood_infections[i] = updated_num_infections;
