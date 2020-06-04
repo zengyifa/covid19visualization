@@ -37,8 +37,12 @@ let infections_to_radius = [
      {"min": 512, "max": Infinity, "radius": max_radius}
 ]
 
-let new_simulation_button_text = "Go to new initial state";
+let reset_simulation_button_text = "Reset Simulation";
 
 let start_simulation_button_text = "Run Simulation";
+
+let pause_simulation_button_text = "Pause simulation";
+
+let continue_simulation_button_text = "Continue Simulation";
 
 let parkland_cell_color = "#7CFC00";

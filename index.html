@@ -443,16 +443,18 @@ function nextDay() {
     }
     if (cur_infections >= population) {
         document.getElementById("nextDay").disabled = true;
+        reset();
     }
 }
 
 //keeps track of whether simulation reached end state.
 var reachedEnd = false;
-
 function runSimulation() {
     if (running === false) {
         if (reachedEnd === false) {
+            //resuming or starting the simulation
             running = true;
+            document.getElementById("startButton").innerHTML = pause_simulation_button_text;
             disableControls();
             tick = setInterval(update, simulation_speed);
         } else {
@@ -467,6 +469,12 @@ function runSimulation() {
             updateDisplayVariables();
             document.getElementById("startButton").innerHTML = start_simulation_button_text;
         }
+    } else {
+        //pausing logic
+        clearInterval(tick);
+        running = false;
+        document.getElementById("nextDay").disabled = false;
+        document.getElementById("startButton").innerHTML = continue_simulation_button_text;
     }
 }
 
@@ -520,8 +528,7 @@ function reset() {
     clearInterval(tick);
     reachedEnd = true;
     running = false;
-    document.getElementById("startButton").innerHTML= new_simulation_button_text;
-    document.getElementById("startButton").disabled = false;
+    document.getElementById("startButton").innerHTML= reset_simulation_button_text;
     if (cur_infections < population) {
         document.getElementById("nextDay").disabled = false;
     }
@@ -540,7 +547,6 @@ function enableControls() {
  * disables controls that shouldn't be changed when simulation is running
  */
 function disableControls() {
-    document.getElementById("startButton").disabled = true;
     document.getElementById("initialInfectionRate").disabled = true;
     document.getElementById("min").disabled = true;
     document.getElementById("max").disabled = true;
