@@ -37,7 +37,7 @@
                 Simulation Speed <b>(<span id="speedValue">1</span> secs/day)</b> :
                 1 <input id="speed" class="slider" type="range" step = 0.1 min="0.1" max="10" value="1"> 10
                 <br />
-                Population <b>(<span id="populationValue">100000</span> people)</b> :
+                Population <b>(<input type="number" style="font-weight: bold; font-size: medium;" id="populationValue"  min="4000" max="400000" value = 100000> people)</b> :
                 4000 <input id="population" step="100" class="slider" type="range" min="4000" max="400000" value="100000"> 400000
                 <br />
                 <div class="controls">
@@ -86,7 +86,7 @@ document.getElementById("parkland").onmouseup = function (){
 
 updateMinCeilingMaxFloor();
 document.getElementById("population").oninput = function () {
-    document.getElementById("populationValue").innerHTML = this.value;
+    document.getElementById("populationValue").value = this.value;
     document.getElementById("populationDisplayed").innerHTML= this.value;
     population = this.value;
 }
@@ -96,6 +96,24 @@ document.getElementById("population").onmouseup = function() {
     distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
     updatePoints();
 }
+
+/**
+ * Updates the simulation with the value inside the "populationValue" box when "enter" key is pressed.
+ **/
+document.getElementById("populationValue").addEventListener("keydown", function(event) {
+    if (event.which == 13) {
+        if (this.value<= 4000 || this.value >= 400000){
+            alert("Please enter a value between 4000 and 400000");
+        }else {
+            document.getElementById("population").value = this.value;
+            document.getElementById("populationDisplayed").innerHTML= this.value;
+            population = this.value;
+            updateMinCeilingMaxFloor();
+            distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
+            updatePoints();
+        }
+    }
+}, false);
 
 function updateMinCeilingMaxFloor() {
     let minCeiling = Math.floor(document.getElementById("population").value / (num_neighborhoods - num_parklands));
@@ -554,6 +572,7 @@ function disableControls() {
     document.getElementById("nextDay").disabled = true;
     document.getElementById("population").disabled = true;
     document.getElementById("parkland").disabled = true;
+    document.getElementById("populationValue").disabled = true;
 }
 </script>
 </body>
