@@ -64,3 +64,17 @@
 }
 
 
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+   -webkit-appearance: none;
+   margin: 0;
+}
+input[type="number"] {
+   -moz-appearance: textfield;
+}
+
+input {
+    min-width:8px;
+    max-width:99.99%;
+    text-align:center;
+  }

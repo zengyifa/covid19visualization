@@ -37,7 +37,7 @@
                 Simulation Speed <b>(<span id="speedValue">1</span> secs/day)</b> :
                 1 <input id="speed" class="slider" type="range" step = 0.1 min="0.1" max="10" value="1"> 10
                 <br />
-                Population <b>(<input type="number" style="font-weight: bold; font-size: medium;" id="populationValue"  min="4000" max="400000" value = 100000> people)</b> :
+                Population <b>(<input type="number" style="font-weight: bold; font-size: medium; width: 54px;" id="populationValue"  min="4000" max="400000" value = 100000> people)</b> :
                 4000 <input id="population" step="100" class="slider" type="range" min="4000" max="400000" value="100000"> 400000
                 <br />
                 <div class="controls">
@@ -66,6 +66,7 @@
 <script>
 
 let population = parseInt(document.getElementById("population").value);
+let previous_population = parseInt(document.getElementById("population").value);
 let parkland_percent = document.getElementById("parkland").value / 100;
 let parklands = generateParklandsArray();
 let num_parklands = parklands.filter(Boolean).length;
@@ -97,23 +98,36 @@ document.getElementById("population").onmouseup = function() {
     updatePoints();
 }
 
-/**
- * Updates the simulation with the value inside the "populationValue" box when "enter" key is pressed.
- **/
-document.getElementById("populationValue").addEventListener("keydown", function(event) {
-    if (event.which == 13) {
-        if (this.value<= 4000 || this.value >= 400000){
-            alert("Please enter a value between 4000 and 400000");
-        }else {
-            document.getElementById("population").value = this.value;
-            document.getElementById("populationDisplayed").innerHTML= this.value;
-            population = this.value;
-            updateMinCeilingMaxFloor();
-            distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
-            updatePoints();
-        }
-    }
+
+document.getElementById("populationValue").addEventListener("focus", function(event) {
+    
+    previous_population = this.value;
+    
 }, false);
+/**
+ * Updates the simulation with the value inside the "populationValue" box when the user leaves the input box
+ **/
+document.getElementById("populationValue").addEventListener("focusout", function(event) {
+    
+    if (this.value< 4000 || this.value > 400000){
+        this.value = previous_population;
+        this.style.width = ((this.value.length) * 9) + 'px';
+    }else {
+        document.getElementById("population").value = this.value;
+        document.getElementById("populationDisplayed").innerHTML= this.value;
+        population = this.value;
+        updateMinCeilingMaxFloor();
+        distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
+        updatePoints();
+    }
+    
+});
+
+document.getElementById("populationValue").addEventListener("keyup", resize)
+
+function resize() {
+    this.style.width = ((this.value.length) * 9) + 'px';
+}
 
 function updateMinCeilingMaxFloor() {
     let minCeiling = Math.floor(document.getElementById("population").value / (num_neighborhoods - num_parklands));
@@ -559,6 +573,7 @@ function enableControls() {
     document.getElementById("nextDay").disabled = false;
     document.getElementById("population").disabled = false;
     document.getElementById("parkland").disabled = false;
+    document.getElementById("populationValue").disabled = false;
 }
 
 /**
