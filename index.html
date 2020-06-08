@@ -31,9 +31,6 @@
                 Parkland Neighborhoods <b>(<span id="parklandValue">0</span>%)</b>:
                 0% <input id="parkland" type="range" min="0" max="25" value="0" class="slider"> 25%
                 <br />
-                Number of Days <b>(<span id="numDaysValue">50</span> days)</b>:
-                1 <input id="numDays" class="slider" min="1" max="100" type="range" value="50"> 100
-                <br />
                 Simulation Speed <b>(<span id="speedValue">1</span> secs/day)</b> :
                 1 <input id="speed" class="slider" type="range" step = 0.1 min="0.1" max="10" value="1"> 10
                 <br />
@@ -222,13 +219,9 @@ let cur_infectionable = Object.assign({},neighborhood_infections);
 distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
 
 var cur_days = 0;
-let num_days = document.getElementById("numDays").value;
 
 
-document.getElementById("numDays").oninput = function () {
-    document.getElementById("numDaysValue").innerHTML = this.value;
-    num_days = parseInt(this.value);
-}
+
 
 var rects = [];
 
@@ -512,7 +505,7 @@ function runSimulation() {
 
 function update() {
     //check if everyone has been infected
-    if (cur_infections >= population || cur_days >= num_days) {
+    if (cur_infections >= population) {
         reset();
         return;
     }
@@ -529,10 +522,10 @@ function getUpdatedNeighborhoodInfections(index) {
    let row = getRow(index, rows_cols);
    let col = getCol(index, rows_cols);
    let adjIndices = getAdjacentsIndices(row, col, rows_cols);
-   var updated_infections = Math.floor(cur_cell_rate * neighborhood_infections[index]);
+   var updated_infections = Math.ceil(cur_cell_rate * neighborhood_infections[index]);
    for (const adj of adjIndices) {
        var percentage_adjacent = adj_cell_rate - 1;
-       updated_infections = updated_infections +  Math.floor(percentage_adjacent * neighborhood_infections[adj]);
+       updated_infections = updated_infections +  Math.ceil(percentage_adjacent * neighborhood_infections[adj]);
    }
    return updated_infections;
 }
@@ -569,7 +562,6 @@ function enableControls() {
     document.getElementById("initialInfectionRate").disabled = false;
     document.getElementById("min").disabled = false;
     document.getElementById("max").disabled = false;
-    document.getElementById("numDays").disabled = false;
     document.getElementById("nextDay").disabled = false;
     document.getElementById("population").disabled = false;
     document.getElementById("parkland").disabled = false;
@@ -583,7 +575,6 @@ function disableControls() {
     document.getElementById("initialInfectionRate").disabled = true;
     document.getElementById("min").disabled = true;
     document.getElementById("max").disabled = true;
-    document.getElementById("numDays").disabled = true;
     document.getElementById("nextDay").disabled = true;
     document.getElementById("population").disabled = true;
     document.getElementById("parkland").disabled = true;
