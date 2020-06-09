@@ -2,14 +2,27 @@
     width:100%;
     overflow: hidden; /* contain floated elements */
 }
+
 .parameters{
     float:left;
     width:35%;
     padding-top:10%;
     font-size:large;
 }
+
 .vis{
     float:left;
+}
+
+#numDays{
+    text-align:center;
+    padding-right:20%;
+    font-size:150%;
+    padding-bottom:5%;
+}
+
+#speed{
+    direction: rtl;
 }
 
 .display_variables {
@@ -58,11 +71,24 @@
 }
 
 .myButton{
+    background-color: #3498DB;
+    color: white;
+    padding: 16px;
+    border: none;
+    cursor: pointer;
     width:80%;
     height:50px;
     font-size:large;
+    margin:5px;
 }
 
+/* Dropdown button on hover & focus */
+.myButton:hover, .myButton:focus {
+    background-color: #2980B9;
+}
+.myButton:disabled {
+    opacity:0.5;
+}
 
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
