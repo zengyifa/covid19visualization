@@ -13,7 +13,7 @@
     <body>
         <div class="container">
             <div class="parameters">
-                Initial infection rate <b>(<span id="initialInfectionRateValue">5%</span>)</b>:
+                Initial infection rate <b>(<input type="number" style="font-weight: bold; font-size: medium; width: 22px;" id="initialInfectionRateValue"  min="0" max="10" value = 5.0>% people)</b>:
                 0% <input id="initialInfectionRate" class="slider" type="range" min="0" max="10" step="0.1" value="5"> 10%
                 <br />
                 Current Cell Infection Rate <b>(<span id="curCellRateValue">10%</span>)</b>:
@@ -38,7 +38,8 @@
                 1 <input id="speed" class="slider" type="range" step = 0.1 min="0.1" max="10" value="1"> 10
                 <br />
                 Population <b>(<input type="number" style="font-weight: bold; font-size: medium; width: 54px;" id="populationValue"  min="4000" max="400000" value = 100000> people)</b> :
-                4000 <input id="population" step="100" class="slider" type="range" min="4000" max="400000" value="100000"> 400000
+                4000  <button class="smallButton" type="button" onclick="populationMinusOne()">-</button><input id="population" step="100" class="slider" type="range" min="4000" max="400000" value="100000">
+                <button class="smallButton" type="button" onclick="populationPlusOne()">+</button> 400000
                 <br />
                 <div class="controls">
                     <button id="startButton" class="myButton" onclick="runSimulation()"><script>document.write(start_simulation_button_text)</script></button>
@@ -67,11 +68,36 @@
 
 let population = parseInt(document.getElementById("population").value);
 let previous_population = parseInt(document.getElementById("population").value);
+let previous_initial_rate = parseInt(document.getElementById("initialInfectionRate").value);
 let parkland_percent = document.getElementById("parkland").value / 100;
 let parklands = generateParklandsArray();
 let num_parklands = parklands.filter(Boolean).length;
 document.getElementById("parkland").oninput = function (){
     document.getElementById("parklandValue").innerHTML = this.value;
+}
+
+/**
+ * Updates the values when the increment buttons are clicked
+ **/
+function populationPlusOne(){
+    document.getElementById("populationValue").value ++;
+    document.getElementById("population").value++;
+    document.getElementById("populationDisplayed").innerHTML ++;
+    population ++;
+    resize.call(document.getElementById("populationValue"));
+    updateMinCeilingMaxFloor();
+    distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
+    updatePoints();
+}
+
+function populationMinusOne(){
+    document.getElementById("populationValue").value --;
+    document.getElementById("population").value--;
+    document.getElementById("populationDisplayed").innerHTML --;
+    resize.call(document.getElementById("populationValue"));
+    updateMinCeilingMaxFloor();
+    distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
+    updatePoints();
 }
 
 document.getElementById("parkland").onmouseup = function (){
@@ -88,20 +114,29 @@ document.getElementById("parkland").onmouseup = function (){
 updateMinCeilingMaxFloor();
 document.getElementById("population").oninput = function () {
     document.getElementById("populationValue").value = this.value;
+    resize.call(document.getElementById("populationValue"));
     document.getElementById("populationDisplayed").innerHTML= this.value;
     population = this.value;
 }
 
 document.getElementById("population").onmouseup = function() {
-    updateMinCeilingMaxFloor();
+    resize.call(document.getElementById("populationValue"));
     distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
     updatePoints();
 }
+
+//document.getElementById("populationValue").addEventListener("change", resize());
 
 
 document.getElementById("populationValue").addEventListener("focus", function(event) {
     
     previous_population = this.value;
+    
+}, false);
+
+document.getElementById("initialInfectionRateValue").addEventListener("focus", function(event) {
+    
+    previous_initial_rate = this.value;
     
 }, false);
 /**
@@ -112,6 +147,7 @@ document.getElementById("populationValue").addEventListener("focusout", function
     if (this.value< 4000 || this.value > 400000){
         this.value = previous_population;
         this.style.width = ((this.value.length) * 9) + 'px';
+        alert("Please enter a value between 4000 and 400000 for population.")
     }else {
         document.getElementById("population").value = this.value;
         document.getElementById("populationDisplayed").innerHTML= this.value;
@@ -123,7 +159,23 @@ document.getElementById("populationValue").addEventListener("focusout", function
     
 });
 
+document.getElementById("initialInfectionRateValue").addEventListener("focusout", function(event) {
+    
+    if (this.value< 0 || this.value > 10){
+        this.value = previous_initial_rate;
+        this.style.width = ((this.value.length) * 9) + 'px';
+        alert("Please enter a value between 0 and 10 for initial infection rate.")
+    }else {
+        document.getElementById("initialInfectionRate").value = this.value;
+        updateMinCeilingMaxFloor();
+        distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
+        updatePoints();
+    }
+    
+});
 document.getElementById("populationValue").addEventListener("keyup", resize)
+
+document.getElementById("initialInfectionRateValue").addEventListener("keyup", resize)
 
 function resize() {
     this.style.width = ((this.value.length) * 9) + 'px';
@@ -265,16 +317,20 @@ document.getElementById("adjCellRate").oninput = function() {
 
 
 document.getElementById("initialInfectionRate").oninput = function() {
-    document.getElementById("initialInfectionRateValue").innerHTML = this.value + "%";
+    document.getElementById("initialInfectionRateValue").value = this.value;
+    resize.call(document.getElementById("initialInfectionRateValue"));
     document.getElementById("numInfected").innerHTML = Math.floor(this.value / 100 * parseInt(document.getElementById("population").innerHTML));
+    
 }
 
 document.getElementById("initialInfectionRate").onmouseup = function() {
     distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
+    resize.call(document.getElementById("initialInfectionRateValue"));
     updatePoints();
 }
 document.getElementById("initialInfectionRate").ontouchend = function() {
     distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
+    resize.call(document.getElementById("initialInfectionRateValue"));
     updatePoints();
 }
 
@@ -574,6 +630,10 @@ function enableControls() {
     document.getElementById("population").disabled = false;
     document.getElementById("parkland").disabled = false;
     document.getElementById("populationValue").disabled = false;
+    var buttonList = document.getElementsByClassName("smallButton");
+    for (var i =0; i< buttonList.length; i++) {
+        buttonList[i].disabled = false;
+    }
 }
 
 /**
@@ -588,6 +648,10 @@ function disableControls() {
     document.getElementById("population").disabled = true;
     document.getElementById("parkland").disabled = true;
     document.getElementById("populationValue").disabled = true;
+    var buttonList = document.getElementsByClassName("smallButton");
+    for (var i =0; i< buttonList.length; i++) {
+        buttonList[i].disabled = true;
+    }
 }
 </script>
 </body>

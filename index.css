@@ -57,6 +57,17 @@
     cursor: pointer;
 }
 
+.smallButton{
+    appearance: none;
+    position: relative;
+    width: 25px;
+    height: 25px;
+    top: -5px;
+    background: #4CAF50;
+    cursor: pointer;
+    font-size:medium;
+}
+
 .myButton{
     width:80%;
     height:50px;
