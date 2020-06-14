@@ -70,6 +70,16 @@
     cursor: pointer;
 }
 
+.smallButton{
+    appearance: none;
+    position: relative;
+    width: 25px;
+    height: 25px;
+    top: -5px;
+    cursor: pointer;
+    font-size:medium;
+}
+
 .myButton{
     background-color: #3498DB;
     color: white;
