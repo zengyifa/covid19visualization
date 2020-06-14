@@ -37,7 +37,6 @@ let infections_to_radius = [
      {"min": 512, "max": Infinity, "radius": max_radius}
 ]
 
-let reset_simulation_button_text = "Reset Simulation";
 
 let start_simulation_button_text = "Run Simulation";
 

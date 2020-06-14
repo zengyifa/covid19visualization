@@ -7,12 +7,19 @@
         <script type="text/javascript" src="d3-grid.js"></script>
         <script type="text/javascript" src="util.js"></script>
         <script type="text/javascript" src="constants.js"></script>
+        <script type="text/javascript" src="dropdown/dropdown.js"></script>
         <link rel="stylesheet" href="index.css">
+        <link rel="stylesheet" href="dropdown/dropdown.css">
+
     </head>
     <title>Covid19 Visualization</title>
     <body>
         <div class="container">
             <div class="parameters">
+                <div id="numDays">
+                    Day Number: <span id="curDay">0</span>
+                </div>
+                <br />
                 Initial infection rate <b>(<input type="number" style="font-weight: bold; font-size: medium; width: 22px;" id="initialInfectionRateValue"  min="0" max="10" value = 5.0>% people)</b>:
                 0% <input id="initialInfectionRate" class="slider" type="range" min="0" max="10" step="0.1" value="5"> 10%
                 <br />
@@ -31,11 +38,8 @@
                 Parkland Neighborhoods <b>(<input type="number" style="font-weight: bold; font-size: medium; width: 9px;" id="parklandValue" value = 0>%)</b>:
                 0% <input id="parkland" type="range" min="0" max="25" value="0" class="slider"> 25%
                 <br />
-                Number of Days <b>(<input type="number" style="font-weight: bold; font-size: medium; width: 18px;" id="numDaysValue" value = 50> days)</b>:
-                1 <input id="numDays" class="slider" min="1" max="100" type="range" value="50"> 100
-                <br />
                 Simulation Speed <b>(<input type="number" style="font-weight: bold; font-size: medium; width: 9px;" id="speedValue" value = 1> secs/day)</b> :
-                1 <input id="speed" class="slider" type="range" step = 0.1 min="0.1" max="10" value="1"> 10
+                1 <input id="speed" class="slider" type="range" step = 0.1 min="0.1" max="1" value="1"> 0.1
                 <br />
                 Population <b>(<input type="number" style="font-weight: bold; font-size: medium; width: 54px;" id="populationValue"  min="4000" max="400000" value = 100000> people)</b> :
                 4000  <button class="smallButton" type="button" onclick="populationMinus()">-</button><input id="population" step="100" class="slider" type="range" min="4000" max="400000" value="100000">
@@ -45,13 +49,18 @@
                     <button id="startButton" class="myButton" onclick="runSimulation()"><script>document.write(start_simulation_button_text)</script></button>
                     <br/>
                     <button id="nextDay" class="myButton" onclick="nextDay()">Next Day </button>
+                    <br />
+                    <div id="dropdown">
+                        <button id="restart" onclick="dropdownFunction()" class="myButton">Restart Simulation</button>
+                        <div id="myDropdown" class="dropdown-content">
+                            <a onclick="restartOriginal()">From Original Initial State</a>
+                            <a onclick="restartNew()">From New Initial State</a>
+                        </div>
+                    </div>
                 </div>
                 <div class="display_variables">
                     <div>Total population:
                         <span id="populationDisplayed"> 100000 </span>
-                    </div>
-                    <div>
-                        Day Number: <span id="curDay">0</span>
                     </div>
                     <div>
                         Number Infected: <span id="numInfected">0</span>
@@ -144,6 +153,7 @@ document.getElementById("population").onmouseup = function() {
     updateMinCeilingMaxFloor();
     updatePoints();
 }
+
 
 /**
  * Updates the simulation with the value inside the "populationValue" box when the user leaves the input box
@@ -319,14 +329,8 @@ let cur_infectionable = Object.assign({},neighborhood_infections);
 distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
 
 var cur_days = 0;
-let num_days = document.getElementById("numDays").value;
 
 
-document.getElementById("numDays").oninput = function () {
-    document.getElementById("numDaysValue").value = this.value;
-    num_days = parseInt(this.value);
-    resize.call(document.getElementById("numDaysValue"))
-}
 
 document.getElementById("numDaysValue").addEventListener("focusout", function(event) {
     if (this.value< 1 || this.value > 100 ){
@@ -639,45 +643,32 @@ function nextDay() {
     }
     if (cur_infections >= population) {
         document.getElementById("nextDay").disabled = true;
-        reset();
+        endOfSimulation();
     }
 }
 
 //keeps track of whether simulation reached end state.
-var reachedEnd = false;
 function runSimulation() {
     if (running === false) {
-        if (reachedEnd === false) {
-            //resuming or starting the simulation
-            running = true;
-            document.getElementById("startButton").innerHTML = pause_simulation_button_text;
-            disableControls();
-            tick = setInterval(update, simulation_speed);
-        } else {
-            //this is if user clicked the button at the endstate of a simulation
-            reachedEnd = false;
-            cur_days = 0;
-            neighborhood_infections = Array(num_neighborhoods).fill(0);
-            cur_infectionable = Object.assign({},neighborhood_infections);
-            distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
-            updatePoints();
-            enableControls();
-            updateDisplayVariables();
-            document.getElementById("startButton").innerHTML = start_simulation_button_text;
-        }
+        //resuming or starting the simulation
+        running = true;
+        document.getElementById("startButton").innerHTML = pause_simulation_button_text;
+        disableControls();
+        tick = setInterval(update, simulation_speed);
     } else {
         //pausing logic
         clearInterval(tick);
         running = false;
         document.getElementById("nextDay").disabled = false;
         document.getElementById("startButton").innerHTML = continue_simulation_button_text;
+        document.getElementById("restart").disabled = false;
     }
 }
 
 function update() {
     //check if everyone has been infected
-    if (cur_infections >= population || cur_days >= num_days) {
-        reset();
+    if (cur_infections >= population) {
+        endOfSimulation();
         return;
     }
     updateInfections();
@@ -693,10 +684,10 @@ function getUpdatedNeighborhoodInfections(index) {
    let row = getRow(index, rows_cols);
    let col = getCol(index, rows_cols);
    let adjIndices = getAdjacentsIndices(row, col, rows_cols);
-   var updated_infections = Math.floor(cur_cell_rate * neighborhood_infections[index]);
+   var updated_infections = Math.ceil(cur_cell_rate * neighborhood_infections[index]);
    for (const adj of adjIndices) {
        var percentage_adjacent = adj_cell_rate - 1;
-       updated_infections = updated_infections +  Math.floor(percentage_adjacent * neighborhood_infections[adj]);
+       updated_infections = updated_infections +  Math.ceil(percentage_adjacent * neighborhood_infections[adj]);
    }
    return updated_infections;
 }
@@ -720,11 +711,12 @@ function updateDisplayVariables() {
 /**
  * Happens at the end of the simulation
  */
-function reset() {
+function endOfSimulation() {
     clearInterval(tick);
-    reachedEnd = true;
     running = false;
-    document.getElementById("startButton").innerHTML= reset_simulation_button_text;
+    document.getElementById("startButton").innerHTML = start_simulation_button_text;
+    document.getElementById("startButton").disabled = true;
+    document.getElementById("restart").disabled = false;
     if (cur_infections < population) {
         document.getElementById("nextDay").disabled = false;
     }
@@ -736,8 +728,7 @@ function enableControls() {
     document.getElementById("max").disabled = false;
     document.getElementById("minValue").disabled = false;
     document.getElementById("maxValue").disabled = false;
-    document.getElementById("numDays").disabled = false;
-    document.getElementById("numDaysValue").disabled = false;
+
     document.getElementById("nextDay").disabled = false;
     document.getElementById("population").disabled = false;
     document.getElementById("parkland").disabled = false;
@@ -747,6 +738,8 @@ function enableControls() {
     for (var i =0; i< buttonList.length; i++) {
         buttonList[i].disabled = false;
     }
+    document.getElementById("restart").disabled = false;
+    document.getElementById("startButton").disabled = false;
 }
 
 /**
@@ -759,8 +752,6 @@ function disableControls() {
     document.getElementById("max").disabled = true;
     document.getElementById("minValue").disabled = true;
     document.getElementById("maxValue").disabled = true;
-    document.getElementById("numDays").disabled = true;
-    document.getElementById("numDaysValue").disabled = true;
     document.getElementById("nextDay").disabled = true;
     document.getElementById("population").disabled = true;
     document.getElementById("parkland").disabled = true;
@@ -770,6 +761,30 @@ function disableControls() {
     for (var i =0; i< buttonList.length; i++) {
         buttonList[i].disabled = true;
     }
+    document.getElementById("restart").disabled = true;
+}
+
+/**
+ * Restarts simulation in a new randomly distributed state based on current parameters
+ */
+function restartNew() {
+    endOfSimulation();
+    parklands = generateParklandsArray();
+    neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
+    updateRects();
+    distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
+    updatePoints();
+    enableControls();
+    cur_days = 0;
+    updateDisplayVariables();
+}
+
+/**
+ * Restarts simulation in with starting point at t=0 for the current simulation, with identical distribution of infections, population,
+ * parklands.
+ */
+function restartOriginal() {
+
 }
 </script>
 </body>
