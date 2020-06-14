@@ -331,20 +331,6 @@ distributeInitialInfections((document.getElementById("initialInfectionRate").val
 var cur_days = 0;
 
 
-
-document.getElementById("numDaysValue").addEventListener("focusout", function(event) {
-    if (this.value< 1 || this.value > 100 ){
-        this.value = document.getElementById("parkland").value;
-        this.style.width = ((this.value.length) * 9) + 'px';
-        alert("Please enter a value between 1 and 100 for the number of days.")
-    }else {
-        document.getElementById("numDays").value = this.value;
-        num_days = parseInt(this.value);
-    }
-});
-
-document.getElementById("numDaysValue").addEventListener("keyup", resize);
-
 var rects = [];
 
 
