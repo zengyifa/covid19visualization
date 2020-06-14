@@ -75,6 +75,7 @@
 
 <script>
 
+
 let population = parseInt(document.getElementById("population").value);
 let parkland_percent = document.getElementById("parkland").value / 100;
 let parklands = generateParklandsArray();
@@ -325,6 +326,7 @@ let adj_cell_rate = 1 + (document.getElementById("adjCellRate").value / 100);
 var cur_infections = 0;
 //represents the number of infections in each neighborhood
 let neighborhood_infections = Array(num_neighborhoods).fill(0);
+//represents a map from neighborhood number to number of infections, where each neighborhood has room for more infections.
 let cur_infectionable = Object.assign({},neighborhood_infections);
 distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
 
@@ -482,7 +484,7 @@ function updateRects() {
 
 
 /**
- * updates points according to infection densities
+ * updates points according to infection numbers
  **/
 function updatePoints() {
     var point = svg.selectAll(".point")
@@ -633,9 +635,23 @@ function nextDay() {
     }
 }
 
+let initial_state = {"neighborhood_populations": JSON.parse(JSON.stringify(neighborhood_populations)) , "neighborhood_infections": JSON.parse(JSON.stringify(neighborhood_infections)),
+                    "curCellRate": document.getElementById("curCellRate").value, "adjCellRate": document.getElementById("adjCellRate").value, "parklands": JSON.parse(JSON.stringify(parklands)), "cur_infectionable": JSON.parse(JSON.stringify(cur_infectionable)),
+                    "cur_infections": cur_infections};
+
 //keeps track of whether simulation reached end state.
 function runSimulation() {
     if (running === false) {
+        //remember initial state to go back to
+        if (cur_days === 0) {
+            initial_state["neighborhood_populations"] = JSON.parse(JSON.stringify(neighborhood_populations));
+            initial_state["neighborhood_infections"] = JSON.parse(JSON.stringify(neighborhood_infections));
+            initial_state["curCellRate"] = document.getElementById("curCellRate").value;
+            initial_state["adjCellRate"] = document.getElementById("adjCellRate").value;
+            initial_state["parklands"] = JSON.parse(JSON.stringify(parklands));
+            initial_state["cur_infectionable"] = JSON.parse(JSON.stringify(cur_infectionable));
+            initial_state["cur_infections"] = cur_infections;
+        }
         //resuming or starting the simulation
         running = true;
         document.getElementById("startButton").innerHTML = pause_simulation_button_text;
@@ -714,7 +730,6 @@ function enableControls() {
     document.getElementById("max").disabled = false;
     document.getElementById("minValue").disabled = false;
     document.getElementById("maxValue").disabled = false;
-
     document.getElementById("nextDay").disabled = false;
     document.getElementById("population").disabled = false;
     document.getElementById("parkland").disabled = false;
@@ -770,7 +785,26 @@ function restartNew() {
  * parklands.
  */
 function restartOriginal() {
+    endOfSimulation();
+    parklands = initial_state["parklands"];
+    neighborhood_populations = initial_state["neighborhood_populations"];
+    neighborhood_infections = initial_state["neighborhood_infections"];
+    cur_infectionable = initial_state["cur_infectionable"];
+    cur_infections = initial_state["cur_infections"];
+    document.getElementById("curCellRate").value = initial_state["curCellRate"];
+    document.getElementById("adjCellRate").value = initial_state["adjCellRate"];
+    var event = new Event('input', {
+        bubbles: true,
+        cancelable: true,
+    });
+    document.getElementById("curCellRate").dispatchEvent(event);
+    document.getElementById("adjCellRate").dispatchEvent(event);
 
+    updatePoints();
+    updateRects();
+    enableControls();
+    cur_days = 0;
+    updateDisplayVariables();
 }
 </script>
 </body>
