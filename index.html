@@ -749,8 +749,9 @@ function getUpdatedNeighborhoodInfections(index) {
 function updateInfections() {
     Object.keys(cur_infectionable).forEach((i, infections) => {
         if (cur_infectionable[i] < neighborhood_populations[i]) {
-            var max_infections = neighborhood_populations[i] - neighborhood_deaths[i] - neighborhood_infections[i];
+            var max_infections = neighborhood_populations[i] - neighborhood_deaths[i];
             neighborhood_infections[i] = Math.min(max_infections, getUpdatedNeighborhoodInfections(i));
+            cur_infectionable[i] = neighborhood_infections[i];
         }
         if ((neighborhood_infections[i] + neighborhood_deaths[i]) >= neighborhood_populations[i]) {
             delete cur_infectionable[i];
