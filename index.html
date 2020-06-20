@@ -29,6 +29,9 @@
                 Adjacent Cell Infection Rate <b>(<input type="number" style="font-weight: bold; font-size: medium; width: 17px;" id="adjCellRateValue"  min="0" max="25" value = 10>%)</b>:
                 0% <input id="adjCellRate" class="slider" type="range"  min="0" max="25" value = 10> 25%
                 <br/>
+                Mortality Rate<b>(<input type="number" style="font-weight: bold; font-size: medium; width: 17px;" id="mortRateValue"  min="1" max="7" value = 5>%)</b>:
+                1% <input id="mortRate" class="slider" type="range"  min="1" max="7" value = 5> 7%
+                <br/>
                 Min Neighborhood Pop <b>(<input type="number" style="font-weight: bold; font-size: medium; width: 17px;" id="minValue" value = 10> people) </b>:
                 10 <input id="min" class="slider" type="range" min="10" value="10"> <span id="minCeiling"></span>
                 <br />
@@ -64,6 +67,9 @@
                     </div>
                     <div>
                         Number Infected: <span id="numInfected">0</span>
+                    </div>
+                    <div>
+                        Number Dead: <span id="numDead">0</span>
                     </div>
                 </div>
             </div>
@@ -324,17 +330,23 @@ let cur_cell_rate = 1 + (document.getElementById("curCellRate").value / 100);
 let adj_cell_rate = 1 + (document.getElementById("adjCellRate").value / 100);
 
 var cur_infections = 0;
+
 //represents the number of infections in each neighborhood
 let neighborhood_infections = Array(num_neighborhoods).fill(0);
 //represents a map from neighborhood number to number of infections, where each neighborhood has room for more infections.
 let cur_infectionable = Object.assign({},neighborhood_infections);
 distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
 
+// total number of current deaths
+var cur_deaths = 0;
+
+let neighborhood_deaths = Array(num_neighborhoods).fill(0);
+
+let mortality_rate = document.getElementById("mortRate").value / 100;
+
 var cur_days = 0;
 
-
 var rects = [];
-
 
 var rectGrid = d3.layout.grid()
     .bands()
@@ -395,6 +407,26 @@ document.getElementById("adjCellRateValue").addEventListener("focusout", functio
 });
 
 document.getElementById("adjCellRateValue").addEventListener("keyup", resize);
+
+document.getElementById("mortRate").oninput = function() {
+    document.getElementById("mortRateValue").value = this.value;
+    mortality_rate =  document.getElementById("mortRate").value / 100;
+    resize.call(document.getElementById("mortRateValue"));
+}
+
+document.getElementById("mortRateValue").addEventListener("focusout", function(event) {
+    if (this.value< 1 || this.value > 7){
+        this.value = document.getElementById("mortRateValue").value;
+        this.style.width = ((this.value.length) * 9) + 'px';
+        alert("Please enter a value between 1 and 7 for mortality rate.")
+    }else {
+        document.getElementById("mortRate").value = this.value;
+        mortality_rate =  document.getElementById("mortRate").value / 100;
+        this.style.width = ((this.value.length) * 9) + 'px';
+    }
+});
+
+document.getElementById("mortRateValue").addEventListener("keyup", resize);
 
 document.getElementById("initialInfectionRate").oninput = function() {
     document.getElementById("initialInfectionRateValue").value = this.value;
@@ -619,38 +651,52 @@ document.getElementById("speedValue").addEventListener("focusout", function(even
 
 document.getElementById("speedValue").addEventListener("keyup", resize);
 
+
+let initial_state = {"neighborhood_populations": JSON.parse(JSON.stringify(neighborhood_populations)) , "neighborhood_infections": JSON.parse(JSON.stringify(neighborhood_infections)),
+    "curCellRate": document.getElementById("curCellRate").value, "adjCellRate": document.getElementById("adjCellRate").value, "parklands": JSON.parse(JSON.stringify(parklands)), "cur_infectionable": JSON.parse(JSON.stringify(cur_infectionable)),
+    "cur_infections": cur_infections};
+
+
+function setInitialStateToCurrentState() {
+    initial_state["neighborhood_populations"] = JSON.parse(JSON.stringify(neighborhood_populations));
+    initial_state["neighborhood_infections"] = JSON.parse(JSON.stringify(neighborhood_infections));
+    initial_state["curCellRate"] = document.getElementById("curCellRate").value;
+    initial_state["adjCellRate"] = document.getElementById("adjCellRate").value;
+    initial_state["parklands"] = JSON.parse(JSON.stringify(parklands));
+    initial_state["cur_infectionable"] = JSON.parse(JSON.stringify(cur_infectionable));
+    initial_state["cur_infections"] = cur_infections;
+}
 /**
  * When next day button is clicked
  **/
 function nextDay() {
-    if (cur_infections < population) {
-        updateInfections();
-        updatePoints();
-        cur_days += 1;
-        updateDisplayVariables();
+    if (cur_days === 0) {
+        setInitialStateToCurrentState()
     }
+    if (cur_deaths < population) {
+        if (cur_infections < population) {
+            updateInfections();
+        }
+        updateDeaths();
+        updatePoints();
+        updateCurInfectionsAndDeaths();
+        updateDisplayVariables();
+        cur_days += 1;
+    }
+
     if (cur_infections >= population) {
         document.getElementById("nextDay").disabled = true;
         endOfSimulation();
     }
 }
 
-let initial_state = {"neighborhood_populations": JSON.parse(JSON.stringify(neighborhood_populations)) , "neighborhood_infections": JSON.parse(JSON.stringify(neighborhood_infections)),
-                    "curCellRate": document.getElementById("curCellRate").value, "adjCellRate": document.getElementById("adjCellRate").value, "parklands": JSON.parse(JSON.stringify(parklands)), "cur_infectionable": JSON.parse(JSON.stringify(cur_infectionable)),
-                    "cur_infections": cur_infections};
 
 //keeps track of whether simulation reached end state.
 function runSimulation() {
     if (running === false) {
         //remember initial state to go back to
         if (cur_days === 0) {
-            initial_state["neighborhood_populations"] = JSON.parse(JSON.stringify(neighborhood_populations));
-            initial_state["neighborhood_infections"] = JSON.parse(JSON.stringify(neighborhood_infections));
-            initial_state["curCellRate"] = document.getElementById("curCellRate").value;
-            initial_state["adjCellRate"] = document.getElementById("adjCellRate").value;
-            initial_state["parklands"] = JSON.parse(JSON.stringify(parklands));
-            initial_state["cur_infectionable"] = JSON.parse(JSON.stringify(cur_infectionable));
-            initial_state["cur_infections"] = cur_infections;
+            setInitialStateToCurrentState();
         }
         //resuming or starting the simulation
         running = true;
@@ -668,15 +714,18 @@ function runSimulation() {
 }
 
 function update() {
-    //check if everyone has been infected
-    if (cur_infections >= population) {
+    if (cur_deaths < population) {
+        if (cur_infections < population) {
+            updateInfections();
+        }
+        updateDeaths();
+        updatePoints();
+        cur_days += 1;
+        updateCurInfectionsAndDeaths();
+        updateDisplayVariables();
+    } else {
         endOfSimulation();
-        return;
     }
-    updateInfections();
-    updatePoints();
-    cur_days += 1;
-    updateDisplayVariables();
 }
 /**
  * increases a neighborhood's infections based on adjacent infections and current neighborhood infections
@@ -693,22 +742,46 @@ function getUpdatedNeighborhoodInfections(index) {
    }
    return updated_infections;
 }
+
 /**
  *  Updates infections for the entire grid. Updates state variables as needed
  **/
 function updateInfections() {
-    for (let i = 0; i < neighborhood_infections.length; i++) {
-        if (neighborhood_infections[i] < neighborhood_populations[i] && !parklands[i]) {
-            let updated_num_infections = Math.min(neighborhood_populations[i], getUpdatedNeighborhoodInfections(i));
-            cur_infections = cur_infections + (updated_num_infections - neighborhood_infections[i]);
-            neighborhood_infections[i] = updated_num_infections;
+    Object.keys(cur_infectionable).forEach((i, infections) => {
+        if (cur_infectionable[i] < neighborhood_populations[i]) {
+            var max_infections = neighborhood_populations[i] - neighborhood_deaths[i] - neighborhood_infections[i];
+            neighborhood_infections[i] = Math.min(max_infections, getUpdatedNeighborhoodInfections(i));
         }
+        if ((neighborhood_infections[i] + neighborhood_deaths[i]) >= neighborhood_populations[i]) {
+            delete cur_infectionable[i];
+        }
+    });
+}
+
+/**
+ * marks mortality_rate % of each neighborhood as dead and subtracts them from the number of infected.
+ * */
+function updateDeaths() {
+    for (let i = 0; i < neighborhood_deaths.length; i++) {
+        var num_new_dead = Math.ceil(mortality_rate * neighborhood_infections[i]);
+        neighborhood_deaths[i] = neighborhood_deaths[i] + num_new_dead;
+        neighborhood_infections[i] = neighborhood_infections[i] -  num_new_dead;
+        cur_infectionable[i] = neighborhood_infections[i];
     }
 }
 
+function updateCurInfectionsAndDeaths() {
+    cur_infections = 0;
+    cur_deaths = 0;
+    for (let i = 0; i < num_neighborhoods; i++) {
+        cur_infections += neighborhood_infections[i];
+        cur_deaths += neighborhood_deaths[i];
+    }
+}
 function updateDisplayVariables() {
     document.getElementById("curDay").innerHTML = cur_days;
     document.getElementById("numInfected").innerHTML = cur_infections;
+    document.getElementById("numDead").innerHTML = cur_deaths;
 }
 /**
  * Happens at the end of the simulation
