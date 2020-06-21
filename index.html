@@ -21,26 +21,26 @@
                 </div>
                 <br />
                 Initial infection rate <b>(<input type="number" style="font-weight: bold; font-size: medium; width: 22px;" id="initialInfectionRateValue"  min="0" max="10" value = 5.0>% people)</b>:
-                0% <input id="initialInfectionRate" class="slider" type="range" min="0" max="10" step="0.1" value="5"> 10%
+                0% <button class="smallButton" type="button" onclick="iMinus()">-</button><input id="initialInfectionRate" class="slider" type="range" min="0" max="10" step="0.1" value="5.0"> <button class="smallButton" type="button" onclick="iPlus()">+</button>10%
                 <br />
                 Current Cell Infection Rate <b>(<input type="number" style="font-weight: bold; font-size: medium; width: 17px;" id="curCellRateValue"  min="0" max="25" value = 10>%)</b>:
-                0% <input id="curCellRate" class="slider" type="range"  min="0" max="25" value = 10> 25%
+                0% <button class="smallButton" type="button" onclick="cMinus()">-</button><input id="curCellRate" class="slider" type="range"  min="0" max="25" value = 10> <button class="smallButton" type="button" onclick="cPlus()">+</button>25%
                 <br/>
                 Adjacent Cell Infection Rate <b>(<input type="number" style="font-weight: bold; font-size: medium; width: 17px;" id="adjCellRateValue"  min="0" max="25" value = 10>%)</b>:
-                0% <input id="adjCellRate" class="slider" type="range"  min="0" max="25" value = 10> 25%
+                0% <button class="smallButton" type="button" onclick="aMinus()">-</button><input id="adjCellRate" class="slider" type="range"  min="0" max="25" value = 10> <button class="smallButton" type="button" onclick="aPlus()">+</button>25%
                 <br/>
                 Min Neighborhood Pop <b>(<input type="number" style="font-weight: bold; font-size: medium; width: 17px;" id="minValue" value = 10> people) </b>:
-                10 <input id="min" class="slider" type="range" min="10" value="10"> <span id="minCeiling"></span>
+                10 <button class="smallButton" type="button" onclick="mnMinus()">-</button><input id="min" class="slider" type="range" min="10" value="10"><button class="smallButton" type="button" onclick="mnPlus()">+</button> <span id="minCeiling"></span>
                 <br />
                 Max Neighborhood Pop <b>(<input type="number" style="font-weight: bold; font-size: medium; width: 36px;" id="maxValue" value = 5000> people) </b>:
-                <span id="maxFloor"></span> <input id="max" type="range" max="5000"  value="5000" class="slider"> 5000
+                <span id="maxFloor"></span> <button class="smallButton" type="button" onclick="nMinus()">-</button> <input id="max" type="range" max="5000"  value="5000" class="slider"> <button class="smallButton" type="button" onclick="nPlus()">+</button>5000
                 <br/>
                 Parkland Neighborhoods <b>(<input type="number" style="font-weight: bold; font-size: medium; width: 9px;" id="parklandValue" value = 0>%)</b>:
-                0% <input id="parkland" type="range" min="0" max="25" value="0" class="slider"> 25%
+                0% <button class="smallButton" type="button" onclick="parkMinus()">-</button><input id="parkland" type="range" min="0" max="25" value="0" class="slider"><button class="smallButton" type="button" onclick="parkPlus()">+</button> 25%
                 <br />
                 Simulation Speed <b>(<input type="number" style="font-weight: bold; font-size: medium; width: 9px;" id="speedValue" value = 1> secs/day)</b> :
-                1 <input id="speed" class="slider" type="range" step = 0.1 min="0.1" max="1" value="1"> 0.1
-                <br />
+                1 <button class="smallButton" type="button" onclick="speedPlus()">+</button><input id="speed" class="slider" type="range" step = 0.1 min="0.1" max="1" value="1"><button class="smallButton" type="button" onclick="speedMinus()">-</button> 0.1
+                <br /> 
                 Population <b>(<input type="number" style="font-weight: bold; font-size: medium; width: 54px;" id="populationValue"  min="4000" max="400000" value = 100000> people)</b> :
                 4000  <button class="smallButton" type="button" onclick="populationMinus()">-</button><input id="population" step="100" class="slider" type="range" min="4000" max="400000" value="100000">
                 <button class="smallButton" type="button" onclick="populationPlus()">+</button> 400000
@@ -57,7 +57,7 @@
                             <a onclick="restartNew()">From New Initial State</a>
                         </div>
                     </div>
-                </div>
+                </div> 
                 <div class="display_variables">
                     <div>Total population:
                         <span id="populationDisplayed"> 100000 </span>
@@ -128,6 +128,222 @@ function populationMinus(){
     distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
     updatePoints();
 }
+
+function iPlus(){
+    var newI =parseFloat(parseFloat(document.getElementById("initialInfectionRateValue").value).toFixed(1) - (-0.1)).toFixed(1) ;
+    if ( newI< 0 || newI > 10){
+        alert("Please enter a value between 0 and 10 for initial infection rate.")
+    }else {
+        document.getElementById("initialInfectionRate").value = newI;
+        document.getElementById("initialInfectionRateValue").value = newI;
+        resize.call(document.getElementById("initialInfectionRateValue"))
+        updateMinCeilingMaxFloor();
+        distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
+        updatePoints();
+    }
+    
+};
+
+function iMinus(){
+    var newI = parseFloat(parseFloat(document.getElementById("initialInfectionRateValue").value).toFixed(1) -0.1).toFixed(1);
+    if ( newI< 0 || newI > 10){
+        alert("Please enter a value between 0 and 10 for initial infection rate.")
+    }else {
+        document.getElementById("initialInfectionRate").value = newI;
+        document.getElementById("initialInfectionRateValue").value = newI;
+        resize.call(document.getElementById("initialInfectionRateValue"))
+        updateMinCeilingMaxFloor();
+        distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
+        updatePoints();
+    }
+    
+};
+
+function cPlus(){
+    var newA = parseInt(document.getElementById("curCellRateValue").value) + 1;
+    if (newA< 0 || newA > 25){
+        alert("Please enter a value between 0 and 25 for Current cell infectoin rate.")
+    }else {
+        document.getElementById("curCellRate").value = newA;
+        document.getElementById("curCellRateValue").value = newA;
+        cur_cell_rate =  1 + (document.getElementById("curCellRate").value / 100);
+        resize.call(document.getElementById("curCellRateValue")) 
+    }
+};
+
+function cMinus(){
+    var newA = parseInt(document.getElementById("curCellRateValue").value) - 1;
+    if (newA< 0 || newA > 25){
+        alert("Please enter a value between 0 and 25 for Current cell infectoin rate.")
+    }else {
+        document.getElementById("curCellRate").value = newA;
+        document.getElementById("curCellRateValue").value = newA;
+        cur_cell_rate =  1 + (document.getElementById("curCellRate").value / 100);
+        resize.call(document.getElementById("curCellRateValue")) 
+    }
+};
+
+function aPlus(){
+    var newA = parseInt(document.getElementById("adjCellRateValue").value) + 1;
+    if (newA< 0 || newA > 25){
+        alert("Please enter a value between 0 and 25 for Adjacent cell infectoin rate.")
+    }else {
+        document.getElementById("adjCellRate").value = newA;
+        document.getElementById("adjCellRateValue").value = newA;
+        adj_cell_rate =  1 + (document.getElementById("adjCellRate").value / 100);
+        resize.call(document.getElementById("adjCellRateValue")) 
+    }
+};
+
+function aMinus(){
+    var newA = parseInt(document.getElementById("adjCellRateValue").value) - 1;
+    if (newA< 0 || newA > 25){
+        alert("Please enter a value between 0 and 25 for Adjacent cell infectoin rate.")
+    }else {
+        document.getElementById("adjCellRate").value = newA;
+        document.getElementById("adjCellRateValue").value = newA;
+        adj_cell_rate =  1 + (document.getElementById("adjCellRate").value / 100);
+        resize.call(document.getElementById("adjCellRateValue")) 
+    }
+};
+
+function mnPlus(){
+    var newN = parseInt(document.getElementById("minValue").value) + 10;
+    if (newN< parseInt(document.getElementById("min").min) || newN > parseInt(document.getElementById("min").max) ){
+        alert("Please enter a valid value for Max Neighborhood Pop.")
+    }else {
+        document.getElementById("min").value = newN;
+        document.getElementById("minValue").value = newN;
+        neighborhood_min = parseInt(newN);
+        resize.call(document.getElementById("minValue")) 
+        neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
+        updateRects();
+        distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
+        updatePoints();
+    }
+};
+
+
+function mnMinus(){
+    var newN = parseInt(document.getElementById("minValue").value) - 10;
+    if (newN< parseInt(document.getElementById("min").min) || newN > parseInt(document.getElementById("min").max) ){
+        alert("Please enter a valid value for Max Neighborhood Pop.")
+    }else {
+        document.getElementById("min").value = newN;
+        document.getElementById("minValue").value = newN;
+        neighborhood_min = parseInt(newN);
+        resize.call(document.getElementById("minValue")) 
+        neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
+        updateRects();
+        distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
+        updatePoints();
+    }
+};
+
+function nPlus(){
+    var newN = parseInt(document.getElementById("maxValue").value) + 100;
+    if (newN< parseInt(document.getElementById("max").min) || newN > parseInt(document.getElementById("max").max) ){
+        alert("Please enter a valid value for Max Neighborhood Pop.")
+    }else {
+        document.getElementById("max").value = newN;
+        document.getElementById("maxValue").value = newN;
+        resize.call(document.getElementById("maxValue")) 
+        neighborhood_max = parseInt(newN);
+        neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
+        updateRects();
+        distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
+        updatePoints();
+    }
+};
+
+
+function nMinus(){
+    var newN = parseInt(document.getElementById("maxValue").value) - 100;
+    if (newN< parseInt(document.getElementById("max").min) || newN > parseInt(document.getElementById("max").max) ){
+        alert("Please enter a valid value for Max Neighborhood Pop.")
+    }else {
+        document.getElementById("max").value = newN;
+        document.getElementById("maxValue").value = newN;
+        resize.call(document.getElementById("maxValue")) 
+        neighborhood_max = parseInt(newN);
+        neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
+        updateRects();
+        distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
+        updatePoints();
+    }
+};
+
+
+function parkPlus(){
+    var newP = parseInt(document.getElementById("parklandValue").value) + 1;
+    if (newP< 0 || newP > 25 ){
+        alert("Please enter a valid value for Parkland Neighborhoods.")
+    }else {
+        document.getElementById("parkland").value = newP;
+        document.getElementById("parklandValue").value = newP;
+        parkland_percent = newP / 100;
+        resize.call(document.getElementById("parklandValue"))    
+        parklands = generateParklandsArray();                                       
+        num_parklands = parklands.filter(Boolean).length;
+        updateMinCeilingMaxFloor();
+        neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
+        updateRects();
+        distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
+        updatePoints();
+    }
+};
+
+function parkMinus(){
+    var newP = parseInt(document.getElementById("parklandValue").value) - 1;
+    if (newP< 0 || newP > 25 ){
+        alert("Please enter a valid value for Parkland Neighborhoods.")
+    }else {
+        document.getElementById("parkland").value = newP;
+        document.getElementById("parklandValue").value = newP;
+        parkland_percent = newP / 100;
+        resize.call(document.getElementById("parklandValue"))
+        parklands = generateParklandsArray();
+        num_parklands = parklands.filter(Boolean).length;
+        updateMinCeilingMaxFloor();
+        neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
+        updateRects();
+        distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
+        updatePoints();
+    }
+};
+
+function speedPlus(){
+    var newS = parseFloat(parseFloat(document.getElementById("speed").value).toFixed(1) - (-0.1)).toFixed(1);
+    if (newS< 0.1 || newS > 1 ){
+        alert("Please enter a valid value for Simulation Speed.")
+    }else {
+        document.getElementById("speed").value = newS;
+        document.getElementById("speedValue").value = newS;
+        resize.call(document.getElementById("speedValue"))
+        simulation_speed = getSimulationSpeed(document.getElementById("speed").value);
+        if (running === true) {
+            clearInterval(tick);
+            tick = setInterval(update, simulation_speed);
+        }
+    }
+};
+
+function speedMinus(){
+    var newS = parseFloat(parseFloat(document.getElementById("speed").value).toFixed(1) - 0.1).toFixed(1);
+    if (newS< 0.1 || newS > 1 ){
+        alert("Please enter a valid value for Simulation Speed.")
+    }else {
+        document.getElementById("speed").value = newS;
+        document.getElementById("speedValue").value = newS;
+        resize.call(document.getElementById("speedValue"))
+        simulation_speed = getSimulationSpeed(document.getElementById("speed").value);
+        if (running === true) {
+            clearInterval(tick);
+            tick = setInterval(update, simulation_speed);
+        }
+    }
+};
+
 
 document.getElementById("parkland").onmouseup = function (){
     parkland_percent = this.value / 100;
@@ -389,7 +605,7 @@ document.getElementById("adjCellRateValue").addEventListener("focusout", functio
         alert("Please enter a value between 0 and 25 for Adjacent cell infectoin rate.")
     }else {
         document.getElementById("adjCellRate").value = this.value;
-        cur_cell_rate =  1 + (document.getElementById("adjCellRate").value / 100);
+        adj_cell_rate =  1 + (document.getElementById("adjCellRate").value / 100);
         this.style.width = ((this.value.length) * 9) + 'px';
     }
 });
