@@ -848,9 +848,11 @@ function restartNew() {
     neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
     updateRects();
     distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
+    neighborhood_deaths = Array(num_neighborhoods).fill(0);
     updatePoints();
     enableControls();
     cur_days = 0;
+    updateCurInfectionsAndDeaths();
     updateDisplayVariables();
 }
 
@@ -865,6 +867,7 @@ function restartOriginal() {
     neighborhood_infections = initial_state["neighborhood_infections"];
     cur_infectionable = initial_state["cur_infectionable"];
     cur_infections = initial_state["cur_infections"];
+    neighborhood_deaths = Array(num_neighborhoods).fill(0);
     document.getElementById("curCellRate").value = initial_state["curCellRate"];
     document.getElementById("adjCellRate").value = initial_state["adjCellRate"];
     var event = new Event('input', {
@@ -873,11 +876,11 @@ function restartOriginal() {
     });
     document.getElementById("curCellRate").dispatchEvent(event);
     document.getElementById("adjCellRate").dispatchEvent(event);
-
     updatePoints();
     updateRects();
     enableControls();
     cur_days = 0;
+    updateCurInfectionsAndDeaths();
     updateDisplayVariables();
 }
 </script>
