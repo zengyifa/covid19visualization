@@ -1,4 +1,30 @@
+function resize() {
+    this.style.width = ((this.value.length) * 9) + 'px';
+}
 
+function updateMinCeilingMaxFloor() {
+    let minCeiling = Math.floor(document.getElementById("population").value / (num_neighborhoods - num_parklands));
+    let maxFloor = Math.ceil(document.getElementById("population").value / (num_neighborhoods - num_parklands));
+    document.getElementById("minCeiling").innerHTML = minCeiling;
+    document.getElementById("maxFloor").innerHTML = maxFloor;
+    document.getElementById("min").max = minCeiling;
+    document.getElementById("max").min = maxFloor;
+    document.getElementById("min").value = document.getElementById("min").min;
+    document.getElementById("max").value = document.getElementById("max").max;
+    var event = new Event('mouseup', {
+        bubbles: true,
+        cancelable: true,
+    });
+    document.getElementById("min").dispatchEvent(event);
+    document.getElementById("max").dispatchEvent(event);
+}
+
+
+
+document.getElementById("parkland").oninput = function (){
+    document.getElementById("parklandValue").value = this.value;
+    resize.call(document.getElementById("parklandValue"))
+}
 document.getElementById("parklandValue").addEventListener("focusout", function(event) {
     if (this.value< 0 || this.value > 25 ){
         this.value = document.getElementById("parkland").value;
@@ -18,6 +44,14 @@ document.getElementById("parklandValue").addEventListener("focusout", function(e
 });
 
 document.getElementById("parklandValue").addEventListener("keyup", resize);
+
+document.getElementById("population").oninput = function () {
+    document.getElementById("populationValue").value = this.value;
+    resize.call(document.getElementById("populationValue"));
+    document.getElementById("populationDisplayed").innerHTML= this.value;
+    population = this.value;
+}
+
 /**
  * Updates the values when the increment buttons are clicked
  **/
@@ -55,7 +89,7 @@ function iPlus(){
         distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
         updatePoints();
     }
-    
+
 };
 
 function iMinus(){
@@ -70,7 +104,7 @@ function iMinus(){
         distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
         updatePoints();
     }
-    
+
 };
 
 function cPlus(){
@@ -81,7 +115,7 @@ function cPlus(){
         document.getElementById("curCellRate").value = newA;
         document.getElementById("curCellRateValue").value = newA;
         cur_cell_rate =  1 + (document.getElementById("curCellRate").value / 100);
-        resize.call(document.getElementById("curCellRateValue")) 
+        resize.call(document.getElementById("curCellRateValue"))
     }
 };
 
@@ -93,7 +127,7 @@ function cMinus(){
         document.getElementById("curCellRate").value = newA;
         document.getElementById("curCellRateValue").value = newA;
         cur_cell_rate =  1 + (document.getElementById("curCellRate").value / 100);
-        resize.call(document.getElementById("curCellRateValue")) 
+        resize.call(document.getElementById("curCellRateValue"))
     }
 };
 
@@ -105,7 +139,7 @@ function aPlus(){
         document.getElementById("adjCellRate").value = newA;
         document.getElementById("adjCellRateValue").value = newA;
         adj_cell_rate =  1 + (document.getElementById("adjCellRate").value / 100);
-        resize.call(document.getElementById("adjCellRateValue")) 
+        resize.call(document.getElementById("adjCellRateValue"))
     }
 };
 
@@ -117,7 +151,7 @@ function aMinus(){
         document.getElementById("adjCellRate").value = newA;
         document.getElementById("adjCellRateValue").value = newA;
         adj_cell_rate =  1 + (document.getElementById("adjCellRate").value / 100);
-        resize.call(document.getElementById("adjCellRateValue")) 
+        resize.call(document.getElementById("adjCellRateValue"))
     }
 };
 
@@ -129,7 +163,7 @@ function mnPlus(){
         document.getElementById("min").value = newN;
         document.getElementById("minValue").value = newN;
         neighborhood_min = parseInt(newN);
-        resize.call(document.getElementById("minValue")) 
+        resize.call(document.getElementById("minValue"))
         neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
         updateRects();
         distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
@@ -146,7 +180,7 @@ function mnMinus(){
         document.getElementById("min").value = newN;
         document.getElementById("minValue").value = newN;
         neighborhood_min = parseInt(newN);
-        resize.call(document.getElementById("minValue")) 
+        resize.call(document.getElementById("minValue"))
         neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
         updateRects();
         distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
@@ -161,7 +195,7 @@ function nPlus(){
     }else {
         document.getElementById("max").value = newN;
         document.getElementById("maxValue").value = newN;
-        resize.call(document.getElementById("maxValue")) 
+        resize.call(document.getElementById("maxValue"))
         neighborhood_max = parseInt(newN);
         neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
         updateRects();
@@ -178,7 +212,7 @@ function nMinus(){
     }else {
         document.getElementById("max").value = newN;
         document.getElementById("maxValue").value = newN;
-        resize.call(document.getElementById("maxValue")) 
+        resize.call(document.getElementById("maxValue"))
         neighborhood_max = parseInt(newN);
         neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
         updateRects();
@@ -196,8 +230,8 @@ function parkPlus(){
         document.getElementById("parkland").value = newP;
         document.getElementById("parklandValue").value = newP;
         parkland_percent = newP / 100;
-        resize.call(document.getElementById("parklandValue"))    
-        parklands = generateParklandsArray();                                       
+        resize.call(document.getElementById("parklandValue"))
+        parklands = generateParklandsArray();
         num_parklands = parklands.filter(Boolean).length;
         updateMinCeilingMaxFloor();
         neighborhood_populations = distribute_population(neighborhood_min, neighborhood_max);
@@ -270,6 +304,36 @@ document.getElementById("parkland").onmouseup = function (){
     updatePoints();
 }
 
+
+document.getElementById("mortRate").oninput = function() {
+    document.getElementById("mortRateValue").value = this.value;
+    mortality_rate =  document.getElementById("mortRate").value / 100;
+    resize.call(document.getElementById("mortRateValue"));
+}
+
+document.getElementById("mortRateValue").addEventListener("focusout", function(event) {
+    if (this.value< 1 || this.value > 7){
+        this.value = document.getElementById("mortRateValue").value;
+        this.style.width = ((this.value.length) * 9) + 'px';
+        alert("Please enter a value between 1 and 7 for mortality rate.")
+    }else {
+        document.getElementById("mortRate").value = this.value;
+        mortality_rate =  document.getElementById("mortRate").value / 100;
+        this.style.width = ((this.value.length) * 9) + 'px';
+    }
+});
+
+document.getElementById("restart").disabled = false;
+
+document.getElementById("minValue").value = document.getElementById("min").value ;
+document.getElementById("maxValue").value = document.getElementById("max").value ;
+
+updateMinCeilingMaxFloor();
+
+document.getElementById("mortRateValue").addEventListener("keyup", resize);
+
+
+
 document.getElementById("population").onmouseup = function() {
     resize.call(document.getElementById("populationValue"));
     distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
@@ -282,7 +346,7 @@ document.getElementById("population").onmouseup = function() {
  * Updates the simulation with the value inside the "populationValue" box when the user leaves the input box
  **/
 document.getElementById("populationValue").addEventListener("focusout", function(event) {
-    
+
     if (this.value< 4000 || this.value > 400000){
         this.value = population;
         this.style.width = ((this.value.length) * 9) + 'px';
@@ -295,11 +359,11 @@ document.getElementById("populationValue").addEventListener("focusout", function
         distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
         updatePoints();
     }
-    
+
 });
 
 document.getElementById("initialInfectionRateValue").addEventListener("focusout", function(event) {
-    
+
     if (this.value< 0 || this.value > 10){
         this.value = population;
         this.style.width = ((this.value.length) * 9) + 'px';
@@ -310,11 +374,16 @@ document.getElementById("initialInfectionRateValue").addEventListener("focusout"
         distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
         updatePoints();
     }
-    
+
 });
 document.getElementById("populationValue").addEventListener("keyup", resize)
 
 document.getElementById("initialInfectionRateValue").addEventListener("keyup", resize)
+
+document.getElementById("min").oninput = function() {
+    document.getElementById("minValue").value = this.value;
+    resize.call(document.getElementById("minValue"));
+}
 
 
 document.getElementById("min").onmouseup = function() {
@@ -325,6 +394,7 @@ document.getElementById("min").onmouseup = function() {
     distributeInitialInfections((document.getElementById("initialInfectionRate").value) / 100);
     updatePoints();
 }
+
 
 document.getElementById("min").ontouchend = function() {
     document.getElementById("minValue").value = this.value;
@@ -438,7 +508,7 @@ document.getElementById("initialInfectionRate").oninput = function() {
     document.getElementById("initialInfectionRateValue").value = this.value;
     resize.call(document.getElementById("initialInfectionRateValue"));
     document.getElementById("numInfected").innerHTML = Math.floor(this.value / 100 * parseInt(document.getElementById("population").innerHTML));
-    
+
 }
 
 document.getElementById("initialInfectionRate").onmouseup = function() {
@@ -479,3 +549,46 @@ document.getElementById("speedValue").addEventListener("focusout", function(even
 });
 
 document.getElementById("speedValue").addEventListener("keyup", resize);
+
+
+function enableControls() {
+    document.getElementById("initialInfectionRate").disabled = false;
+    document.getElementById("initialInfectionRateValue").disabled = false;
+    document.getElementById("min").disabled = false;
+    document.getElementById("max").disabled = false;
+    document.getElementById("minValue").disabled = false;
+    document.getElementById("maxValue").disabled = false;
+    document.getElementById("nextDay").disabled = false;
+    document.getElementById("population").disabled = false;
+    document.getElementById("parkland").disabled = false;
+    document.getElementById("parklandValue").disabled = false;
+    document.getElementById("populationValue").disabled = false;
+    var buttonList = document.getElementsByClassName("smallButton");
+    for (var i =0; i< buttonList.length; i++) {
+        buttonList[i].disabled = false;
+    }
+    document.getElementById("restart").disabled = false;
+    document.getElementById("startButton").disabled = false;
+}
+
+/**
+ * disables controls that shouldn't be changed when simulation is running
+ */
+function disableControls() {
+    document.getElementById("initialInfectionRate").disabled = true;
+    document.getElementById("initialInfectionRateValue").disabled = true;
+    document.getElementById("min").disabled = true;
+    document.getElementById("max").disabled = true;
+    document.getElementById("minValue").disabled = true;
+    document.getElementById("maxValue").disabled = true;
+    document.getElementById("nextDay").disabled = true;
+    document.getElementById("population").disabled = true;
+    document.getElementById("parkland").disabled = true;
+    document.getElementById("parklandValue").disabled = true;
+    document.getElementById("populationValue").disabled = true;
+    var buttonList = document.getElementsByClassName("smallButton");
+    for (var i =0; i< buttonList.length; i++) {
+        buttonList[i].disabled = true;
+    }
+    document.getElementById("restart").disabled = true;
+}
