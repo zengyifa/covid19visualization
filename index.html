@@ -87,6 +87,7 @@ let population = parseInt(document.getElementById("population").value);
 let parkland_percent = document.getElementById("parkland").value / 100;
 let parklands = generateParklandsArray();
 let num_parklands = parklands.filter(Boolean).length;
+document.getElementById("restart").disabled = false;
 document.getElementById("parkland").oninput = function (){
     document.getElementById("parklandValue").value = this.value;
     resize.call(document.getElementById("parklandValue"))
@@ -369,12 +370,27 @@ let simulation_speed = getSimulationSpeed(document.getElementById("speed").value
 var tick = 0;
 var running = false;
 
+let initial_state = {"neighborhood_populations": JSON.parse(JSON.stringify(neighborhood_populations)) , "neighborhood_infections": JSON.parse(JSON.stringify(neighborhood_infections)),
+    "curCellRate": document.getElementById("curCellRate").value, "adjCellRate": document.getElementById("adjCellRate").value, "parklands": JSON.parse(JSON.stringify(parklands)), "cur_infectionable": JSON.parse(JSON.stringify(cur_infectionable)),
+    "cur_infections": cur_infections};
+
+
+function setInitialStateToCurrentState() {
+    initial_state["neighborhood_populations"] = JSON.parse(JSON.stringify(neighborhood_populations));
+    initial_state["neighborhood_infections"] = JSON.parse(JSON.stringify(neighborhood_infections));
+    initial_state["curCellRate"] = document.getElementById("curCellRate").value;
+    initial_state["adjCellRate"] = document.getElementById("adjCellRate").value;
+    initial_state["parklands"] = JSON.parse(JSON.stringify(parklands));
+    initial_state["cur_infectionable"] = JSON.parse(JSON.stringify(cur_infectionable));
+    initial_state["cur_infections"] = cur_infections;
+}
+
 /**
  * When next day button is clicked
  **/
 function nextDay() {
     if (cur_days === 0) {
-        setInitialStateToCurrentState()
+        setInitialStateToCurrentState();
     }
     if (cur_deaths < population) {
         if (cur_infections < population) {
